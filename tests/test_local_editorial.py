@@ -22,9 +22,9 @@ def test_local_model_needs_no_api_key_and_returns_chinese_json(config, monkeypat
 @respx.mock
 def test_local_schema_constrains_category_names_without_copying_placeholders(config):
     import json
-    from news_agent.local_editorial import selection_schema
+    from news_agent.selection import rating_schema
     config['model'].update(provider='ollama', api_key_env=None, base_url='http://127.0.0.1:11434')
-    schema = selection_schema({'a0': 'original-id'}, 10, 15)
+    schema = rating_schema(['a0_title'])
     route = respx.post('http://127.0.0.1:11434/api/chat').mock(return_value=httpx.Response(200,
         json={'message': {'content': '{"events":[]}'}}))
     model = Model(config['model'])
@@ -32,7 +32,7 @@ def test_local_schema_constrains_category_names_without_copying_placeholders(con
     finally: model.close()
     request = json.loads(route.calls[0].request.content)
     assert request['format'] == schema
-    assert request['format']['properties']['events']['items']['properties']['category']['enum'] == ['politics', 'economics', 'business', 'technology', 'world']
+    assert request['format']['properties']['ratings']['properties']['a0_title']['properties']['category']['enum'] == ['politics', 'economics', 'business', 'technology', 'world']
     assert 'response_schema' not in request['messages'][1]['content']
 
 
@@ -45,8 +45,10 @@ def test_local_pipeline_reviews_every_story_and_final_edition(config, artifacts)
         drafts = 0
         def ask(self, system, payload):
             self.calls += 1
-            if payload['task'].startswith('Group reporting'):
-                return {'events': [dict(e, article_ids=[payload['articles'][i]['id']]) for i, e in enumerate(events)]}
+            if payload['task'].startswith('Rate EVERY'):
+                return {'ratings': {a['id']: {'category': edition['stories'][int(a['id'].split('_')[0][1:])]['category'],
+                    'genre': 'breaking_news', 'event_key': edition['stories'][int(a['id'].split('_')[0][1:])]['event_key'],
+                    'is_conflict': False, 'consequence': 4, 'global_relevance': 4} for a in payload['articles']}}
             if payload['task'].startswith('Audit the selected'):
                 return {'checks': {e['event_key']: {'genre': 'breaking_news', 'category': e['category'], 'all_sources_cover_this_event': True,
                     'new_development': True, 'globally_consequential': True, 'duplicate_of': 'none', 'reason': 'Synthetic test assessment'} for e in payload['events']}}
@@ -91,8 +93,10 @@ def test_local_rejects_mismatched_selection_before_writing(config, artifacts):
     class ModelRejectingSelection:
         drafts = 0
         def ask(self, system, payload):
-            if payload['task'].startswith('Group reporting'):
-                return {'events': [dict(e, article_ids=[payload['articles'][i]['id']]) for i, e in enumerate(events)]}
+            if payload['task'].startswith('Rate EVERY'):
+                return {'ratings': {a['id']: {'category': edition['stories'][int(a['id'].split('_')[0][1:])]['category'],
+                    'genre': 'breaking_news', 'event_key': edition['stories'][int(a['id'].split('_')[0][1:])]['event_key'],
+                    'is_conflict': False, 'consequence': 4, 'global_relevance': 4} for a in payload['articles']}}
             if payload['task'].startswith('Write ONE'): self.drafts += 1
             return {'approved': False, 'issues': ['Event key does not match the actual source title']}
         def close(self): pass
@@ -132,3 +136,19 @@ def test_selection_review_cannot_approve_sports_as_company_news(artifacts):
              'globally_consequential': True, 'duplicate_of': 'none', 'reason': 'This concerns a cricket match'}
     with pytest.raises(EditorialError, match='Selection review failed'):
         validate_selection_audit({'checks': {event['event_key']: check}}, [event])
+
+
+def test_programmatic_selection_groups_duplicates_and_excludes_sports(config):
+    from news_agent.selection import select
+    catalog = [{'id': f'a{i}', 'title': f'Article {i}', 'family': f'publisher-{i%3}', 'published_age_hours': 1} for i in range(12)]
+    categories = ['politics']*3 + ['economics']*3 + ['business']*2 + ['technology']*2 + ['business']*2
+    ratings = {a['id']: {'category': categories[i], 'genre': 'breaking_news', 'event_key': f'event_{i}',
+               'is_conflict': False, 'consequence': 4, 'global_relevance': 4} for i, a in enumerate(catalog)}
+    ratings['a10'].update(event_key='event_6')
+    ratings['a11'].update(genre='sports', consequence=5, global_relevance=5)
+    events = select(catalog, ratings, config)
+    assert len(events) == 10
+    assert len({e['event_key'] for e in events}) == 10
+    assert 'a11' not in {aid for e in events for aid in e['article_ids']}
+    company = next(e for e in events if e['event_key'] == 'event_6')
+    assert set(company['article_ids']) == {'a6', 'a10'}

@@ -20,15 +20,6 @@ def object_schema(properties):
 
 REVIEW_SCHEMA = object_schema({'approved': {'type': 'boolean'}, 'issues': {'type': 'array', 'items': {'type': 'string'}}})
 
-def selection_schema(aliases, minimum, maximum):
-    scores = object_schema({name: {'type': 'integer', 'minimum': 0, 'maximum': 5}
-                            for name in ('consequence', 'timeliness', 'credibility', 'global_relevance')})
-    event = object_schema({'event_key': {'type': 'string'},
-        'category': {'type': 'string', 'enum': ['politics', 'economics', 'business', 'technology', 'world']},
-        'article_ids': {'type': 'array', 'items': {'type': 'string', 'enum': list(aliases)}, 'minItems': 1, 'maxItems': 3},
-        'scores': scores})
-    return object_schema({'events': {'type': 'array', 'items': event, 'minItems': minimum, 'maxItems': maximum}})
-
 def story_schema(aliases):
     ref = object_schema({'article_id': {'type': 'string', 'enum': list(aliases)}, 'quote': {'type': 'string'}})
     claim = object_schema({'kind': {'type': 'string', 'enum': ['fact', 'context']}, 'text': {'type': 'string'},
@@ -120,6 +111,7 @@ def resolve_story(candidate, event, aliases):
     candidate = copy.deepcopy(candidate)
     for name in ('event_key', 'category', 'article_ids', 'scores'):
         candidate[name] = copy.deepcopy(event[name])
+    if 'is_conflict' in event: candidate['is_conflict'] = event['is_conflict']
     references = [candidate.get('freshness', {})]
     if not isinstance(candidate.get('claims', []), list):
         raise EditorialError('Claims must be a list')
@@ -152,50 +144,56 @@ def generate_local(config, articles, date, model, as_of):
         words = re.findall(r'\w+', article.title.casefold())
         aid = f'a{len(catalog)}_' + '_'.join(words[:5])[:48]
         aliases[aid] = article.id
-        item = {'id': aid, 'title': article.title, 'publisher': article.publisher,
+        item = {'id': aid, 'title': article.title, 'publisher': article.publisher, 'family': article.family,
                 'published_age_hours': round((as_of - timestamp(article.published)).total_seconds() / 3600, 2)}
-        excerpt_size = config['model'].get('ranking_excerpt_characters', 180)
+        excerpt_size = config['model'].get('selection_excerpt_characters', 240)
         if excerpt_size: item['excerpt'] = lead[:excerpt_size]
         catalog.append(item)
-    ranking_payload = {
-        'task': 'Group reporting of the same event across languages and select 10–15 highest-impact distinct events. '
-                'Do not write summaries yet. Vary category counts with important developments each day, without fixed category quotas; economics and companies must get substantive coverage. '
-                'Reject recaps, explainers and old events; include only concrete new developments. Keep a varied mix and avoid technology or conflict dominating. Select no trivial sports, entertainment or personal-interest items. '
-                'All short IDs must exist. Never associate an event with an unrelated title. Every ID can occur in only one event. '
-                'Business means company transactions, earnings and operations; economics means macroeconomics, markets and trade. '
-                'Do not label public health or human-interest features as business. Choose up to 3 useful original reports/event.',
-        'preferences': config['editorial'], 'date': date, 'as_of': as_of.isoformat(), 'articles': catalog,
-        'response_schema': selection_schema(aliases, n['min_stories'], n['max_stories']),
-        'valid_categories': ['politics', 'economics', 'business', 'technology', 'world'],
-        'schema': {'events': [{'event_key': 'short unique event key', 'category': 'politics',
-                              'article_ids': ['existing short IDs'],
-                              'scores': {'consequence': 5, 'timeliness': 5, 'credibility': 5, 'global_relevance': 5}}]}}
+    from .selection import classify, select
+    ratings = classify(catalog, model, RANK_SYSTEM, config)
+    excluded = set()
     selection_attempts = config['model'].get('selection_attempts', 3)
     for attempt in range(selection_attempts):
-        ranked = model.ask(RANK_SYSTEM, ranking_payload)
+        selected = select(catalog, ratings, config, excluded=excluded)
+        events = decode_selection(selected, aliases, config)
+        audit = model.ask(RANK_SYSTEM, {
+            'task': 'Audit the selected events BEFORE writing. Assess EACH separately: genre, category, '
+                    'all_sources_cover_this_event, new_development, globally_consequential, duplicate_of and reason. '
+                    'all_sources_cover_this_event checks sources WITHIN this individual event; it is true for a matching single-source event. '
+                    'Different selected events should be distinct. Reject unrelated merged sources, sports, minor features, '
+                    'recaps, opinions, explainers and misclassified categories. A cricket fixture is sports, never business. '
+                    'Company transactions/earnings/operations are business; government diplomatic/legal policy actions are politics; '
+                    'macroeconomic data, financial markets and trade are economics. Require an actual substantive new development '
+                    'and a major global consequence. Explain the evidence behind each judgment. '
+                    'Return checks keyed by event_key; duplicate_of is none unless this repeats another selected event.',
+            'events': [dict(event, sources=[{'title': by_id[aid].title, 'publisher': by_id[aid].publisher,
+                                           'lead': by_id[aid].evidence[:600]} for aid in event['article_ids']]) for event in events],
+            'preferences': config['editorial'], 'response_schema': selection_audit_schema(events)})
         try:
-            events = decode_selection(ranked.get('events', []), aliases, config)
-            audit = model.ask(RANK_SYSTEM, {
-                'task': 'Audit the selected events BEFORE writing. Each event must contain only coverage of the SAME event, '
-                        'and its event key and category must match its actual source titles. Reject unrelated merged articles, '
-                        'misclassified categories, minor human-interest stories, explainers, recaps and duplicate events. '
-                        'Assess EACH event separately: genre, category, all_sources_cover_this_event, new_development, globally_consequential, duplicate_of and reason. '
-                        'all_sources_cover_this_event asks whether sources WITHIN this individual event cover the same development; it is true for a matching single-source event. '
-                        'Different selected events should of course be distinct. '
-                        'Cricket/sports fixtures are sports, never company business. A campaign rally interruption is minor without a major new policy. '
-                        'Government diplomatic/legal actions are politics; do not relabel them as economics to meet balance limits. '
-                        'Explain what actually changed and its global consequence. Set false if evidence is inadequate. '
-                        'Return {"checks": {event_key: assessment}}; duplicate_of is none unless it repeats another selected event.',
-                'events': [dict(event, sources=[{'title': by_id[aid].title, 'publisher': by_id[aid].publisher,
-                                                'lead': by_id[aid].evidence[:600]} for aid in event['article_ids']]) for event in events],
-                'preferences': config['editorial'], 'response_schema': selection_audit_schema(events)})
             validate_selection_audit(audit, events)
             break
         except EditorialError as exc:
             LOG.warning('Selection rejected attempt=%d reason=%s', attempt + 1, str(exc))
             if attempt == selection_attempts - 1: raise
-            ranking_payload['validation_error'] = str(exc)
-            ranking_payload['previous_selection'] = ranked
+            checks = audit.get('checks', {})
+            if set(checks) != {e['event_key'] for e in events}: raise
+            alias_by_id = {v: k for k, v in aliases.items()}
+            for event in events:
+                check = checks[event['event_key']]
+                ids = [alias_by_id[aid] for aid in event['article_ids']]
+                if (check.get('genre') != 'breaking_news' or any(check.get(k) is not True
+                        for k in ('new_development', 'globally_consequential', 'all_sources_cover_this_event'))):
+                    # Omit sources the audit cannot substantiate; never turn a
+                    # rejected story into approved copy by changing its label.
+                    excluded.update(ids)
+                    continue
+                category = check.get('category')
+                if category not in ('politics', 'economics', 'business', 'technology', 'world'): raise
+                duplicate = check.get('duplicate_of')
+                if duplicate not in {'none'} | {e['event_key'] for e in events} or duplicate == event['event_key']: raise
+                for aid in ids:
+                    ratings[aid]['category'] = category
+                    if duplicate != 'none': ratings[aid]['event_key'] = duplicate
     edition = {'date': date, 'as_of': as_of.isoformat(), 'stories': []}
     for index, event in enumerate(events, 1):
         LOG.info('Local editorial story=%d/%d event=%s', index, len(events), event.get('event_key'))
