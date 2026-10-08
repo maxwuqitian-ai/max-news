@@ -22,6 +22,25 @@ def test_local_model_needs_no_api_key_and_returns_chinese_json(config, monkeypat
 
 
 @respx.mock
+def test_reasoning_output_limit_continues_once_and_preserves_rejection(config):
+    import json
+    config['model'].update(provider='ollama', api_key_env=None, base_url='http://127.0.0.1:11434', thinking=True)
+    route=respx.post('http://127.0.0.1:11434/api/chat').mock(side_effect=[
+        httpx.Response(200,json={'done_reason':'length','message':{'thinking':'A number is unsupported.', 'content':'{"approved":'}}),
+        httpx.Response(200,json={'message':{'content':'{"approved":false,"issues":["Unsupported number"]}'}})])
+    model=Model(config['model'])
+    try:
+        result=model.ask('Reject unsupported facts.', {'task':'Audit supplied sources'})
+    finally: model.close()
+    assert result=={'approved':False,'issues':['Unsupported number']}
+    assert len(route.calls)==2
+    continuation=json.loads(route.calls[1].request.content)
+    assert continuation['think'] is False
+    assert continuation['messages'][0]['content']=='Reject unsupported facts.'
+    assert 'unsupported' in continuation['messages'][-2]['content']
+
+
+@respx.mock
 def test_local_schema_constrains_category_names_without_copying_placeholders(config):
     import json
     from news_agent.selection import rating_schema
