@@ -1,0 +1,41 @@
+name: Check Resend delivery status
+on:
+  workflow_dispatch:
+    inputs:
+      email_id:
+        description: Provider message ID from the delivery ledger
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Read provider delivery status without sending another email
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NEWS_RECIPIENT: ${{ secrets.NEWS_RECIPIENT }}
+          EMAIL_ID: ${{ inputs.email_id }}
+        run: |
+          python3 - <<'PY'
+          import json, os, uuid
+          from email.utils import parseaddr
+          from urllib.request import Request, urlopen
+          from urllib.error import HTTPError
+          message_id = str(uuid.UUID(os.environ['EMAIL_ID']))
+          request = Request('https://api.resend.com/emails/' + message_id,
+              headers={'Authorization': 'Bearer ' + os.environ['RESEND_API_KEY']})
+          try:
+              with urlopen(request, timeout=20) as response:
+                  body = json.load(response)
+          except HTTPError as exc:
+              raise SystemExit('Provider status read unavailable: HTTP ' + str(exc.code))
+          target = parseaddr(os.environ['NEWS_RECIPIENT'])[1].casefold()
+          recipients = [parseaddr(value)[1].casefold() for value in body.get('to', [])]
+          if target not in recipients:
+              raise SystemExit('Provider recipient does not match configured recipient')
+          print('Recipient matches configured recipient: true')
+          print('Resend delivery status: ' + str(body.get('last_event', 'unknown')))
+          PY
