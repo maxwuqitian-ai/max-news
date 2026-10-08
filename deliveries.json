@@ -8,9 +8,11 @@
     "reconciliation": "The unchanged Codex credential is rejected by Resend with HTTP 400: API key is invalid. It cannot authorize email sending. No provider message ID was issued. Original attempt preserved; next manual test uses the separate GitHub secret."
   },
   "test:github-reviewed-sample-2026-10-08:9f8e6d8e5c2447cc": {
-    "status": "pending",
+    "status": "sent",
     "provider": "resend",
     "date": "2026-10-08",
-    "attempted_at": "2026-10-08T13:51:41.617283+00:00"
+    "attempted_at": "2026-10-08T13:51:41.617283+00:00",
+    "message_id": "01a11bc8-bf2a-76ae-be07-1751c0e3f6b0",
+    "sent_at": "2026-10-08T13:51:43.494930+00:00"
   }
 }
