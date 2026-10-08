@@ -37,6 +37,21 @@ def classify(catalog, model, system, config):
                     'Reports of the SAME event must use the SAME key, including existing keys below. '
                     'Different countries/entities/actions must not share a key. is_conflict is true for armed-conflict reporting.',
             'articles': batch,
+            'category_definitions': {'politics': 'government, elections, diplomacy, national laws and government policy',
+                'economics': 'macroeconomic data, financial markets, trade and economy-wide conditions',
+                'business': 'company transactions, acquisitions, earnings, competition and operations',
+                'technology': 'computing, AI, products and significant research breakthroughs',
+                'world': 'major public health, disasters and other globally consequential non-political events'},
+            'genre_definitions': {'breaking_news': 'FACTUAL REPORT of a substantive NEW development, announcement, decision, transaction, data release or verified change; this is the eligible news genre',
+                'explainer': 'background/how/why analysis without a substantive new development',
+                'recap': 'retelling or rounding up previously reported developments',
+                'opinion': 'commentary, reviews, letters and author opinions',
+                'sports': 'sports fixtures, match results, athletes and competitions; never political protests',
+                'entertainment': 'actors, films, celebrity events and entertainment features',
+                'personal_interest': 'minor local cases, human-interest features, lifestyle and travel'},
+            'impact_scale': {'0': 'irrelevant', '1': 'minor or personal-interest', '2': 'limited/local consequence',
+                '3': 'significant regional or sector consequence', '4': 'major national/international consequence',
+                '5': 'exceptional global consequence'},
             'known_events': {r['event_key']: next(a['title'] for a in catalog if a['id'] == aid)
                              for aid, r in ratings.items()},
             'response_schema': rating_schema([a['id'] for a in batch])}
