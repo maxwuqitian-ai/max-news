@@ -3,6 +3,25 @@ on: [push, pull_request]
 permissions:
   contents: read
 jobs:
+  deployment-readiness:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      NEWS_SENDER: ${{ secrets.NEWS_SENDER }}
+      NEWS_RECIPIENT: ${{ secrets.NEWS_RECIPIENT }}
+    steps:
+      - name: Check required delivery secrets without exposing values
+        run: |
+          python3 - <<'PY'
+          import os
+          required = ('RESEND_API_KEY', 'NEWS_SENDER', 'NEWS_RECIPIENT')
+          missing = [name for name in required if not os.environ.get(name)]
+          for name in required:
+              print(name + ': ' + ('configured' if name not in missing else 'missing'))
+          if missing:
+              raise SystemExit('Configure GitHub Actions Secrets: ' + ', '.join(missing))
+          PY
   test:
     runs-on: ubuntu-latest
     steps:
