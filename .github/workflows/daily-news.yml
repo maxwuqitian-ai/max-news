@@ -72,13 +72,15 @@ jobs:
               f.write(f'enabled={str(enabled).lower()}\nmode={mode}\n')
           PY
       - name: Restore local model cache
+        id: model_cache
         if: steps.gate.outputs.enabled == 'true'
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: |
             .tools/ollama
             .models
-          key: ollama-linux-amd64-0.40.1-qwen2.5-7b-v1
+          key: ollama-linux-amd64-0.40.1-${{ hashFiles('config.yaml', 'scripts/install_ollama.sh') }}
+          restore-keys: ollama-linux-amd64-0.40.1-
       - name: Check email credentials before generation
         if: steps.gate.outputs.enabled == 'true' && steps.gate.outputs.mode != 'preview'
         run: |
@@ -90,11 +92,21 @@ jobs:
               raise SystemExit('Missing GitHub Actions Secrets: ' + ', '.join(missing))
           PY
       - name: Start local model (no paid API key)
+        id: model_start
         if: steps.gate.outputs.enabled == 'true'
         run: |
           ./scripts/install_ollama.sh
           ./scripts/start_ollama.sh
-          OLLAMA_HOST=127.0.0.1:11434 .tools/ollama/bin/ollama pull qwen2.5:7b
+          model_name=$(python -c "from news_agent.config import load; print(load('config.yaml')['model']['name'])")
+          OLLAMA_HOST=127.0.0.1:11434 .tools/ollama/bin/ollama pull "$model_name"
+      - name: Save verified model cache
+        if: always() && steps.model_start.conclusion == 'success' && steps.model_cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .tools/ollama
+            .models
+          key: ${{ steps.model_cache.outputs.cache-primary-key }}
       - name: Initialize durable delivery state
         if: steps.gate.outputs.enabled == 'true' && steps.gate.outputs.mode != 'preview'
         run: python scripts/state_branch.py init
