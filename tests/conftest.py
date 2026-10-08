@@ -10,6 +10,8 @@ from news_agent.collect import Article
 def config(tmp_path):
     c = load('config.yaml')
     c['model']['provider'] = 'openai'
+    c['model']['grounded_translation'] = False
+    c['editorial']['mode'] = 'generative'
     c['model']['api_key_env'] = 'NEWS_LLM_API_KEY'
     c['newsletter']['state_dir'] = str(tmp_path / 'state')
     c['newsletter']['output_dir'] = str(tmp_path / 'output')

@@ -61,6 +61,7 @@ class Article:
     retrieved: str
     method: str
     discovered: str | None = None
+    publisher_excerpt: str | None = None
     def to_dict(self): return asdict(self)
 
 
@@ -78,10 +79,17 @@ class PublicationParser(HTMLParser):
     def __init__(self):
         super().__init__()
         self.published = None
+        self.description = None
+        self.headline = None
         self.ld = False
         self.ld_parts = []
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
+        field = (attrs.get('property') or attrs.get('name', '')).lower()
+        if tag == 'meta' and field in ('og:description','description'):
+            self.description = clean(attrs.get('content','')) or self.description
+        if tag == 'meta' and field == 'og:title':
+            self.headline = clean(attrs.get('content','')) or self.headline
         if tag == 'meta' and (attrs.get('property') or attrs.get('name', '')).lower() in ('article:published_time', 'datepublished'):
             try: self.published = timestamp(attrs.get('content'))
             except ValueError: pass
@@ -107,7 +115,7 @@ class PublicationParser(HTMLParser):
             except (ValueError, TypeError): pass
 
 
-def publisher_page(client, url, domains):
+def publisher_page(client, url, domains, *, with_metadata=False):
     # Follow only allowlisted publisher redirects; do not follow arbitrary feed URLs.
     for _ in range(5):
         if not allowed(url, domains): raise ValueError('Redirect outside publisher domains')
@@ -118,6 +126,8 @@ def publisher_page(client, url, domains):
             continue
         metadata = PublicationParser()
         metadata.feed(response.text)
+        if with_metadata:
+            return clean(response.text), metadata.published, metadata.description, metadata.headline
         return clean(response.text), metadata.published
     raise ValueError('Too many redirects')
 
@@ -139,16 +149,23 @@ def collect(config, now=None, client=None):
                 if feed.bozo and not feed.entries: raise ValueError('Invalid feed')
                 for entry in feed.entries[:config['newsletter'].get('max_per_feed', 25)]:
                     stamp = entry.get('published_parsed')
-                    if not stamp: continue  # Never invent a publisher timestamp.
-                    published = datetime(*stamp[:6], tzinfo=timezone.utc)
-                    if not in_window(published, now, hours): continue
+                    discovery_stamp = entry.get('updated_parsed') if not stamp else None
+                    if not stamp and not discovery_stamp: continue
+                    observed = datetime(*(stamp or discovery_stamp)[:6], tzinfo=timezone.utc)
+                    if not in_window(observed, now, hours): continue
+                    published = observed if stamp else None
                     try:
+                        exclusion=source.get('exclude_title_pattern')
+                        if exclusion and re.search(exclusion,entry.get('title','')): continue
                         url = canonical_url(entry.get('link', ''))
                         if not allowed(url, source['domains']): continue
                         body = ' '.join(c.get('value', '') for c in entry.get('content', [])) or entry.get('summary', '')
                         evidence = entry.get('title', '') + '. ' + body
-                        article = make_article(entry.get('title', ''), url, source['name'], source['family'], published, evidence, now, 'rss')
-                        if len(article.evidence) >= 100: articles[url] = article
+                        article = make_article(entry.get('title', ''), url, source['name'], source['family'], published, evidence, now,
+                                               'rss' if stamp else 'rss_discovery_time')
+                        if discovery_stamp: article.discovered=observed.isoformat()
+                        article.publisher_excerpt = clean(body)[:6000]
+                        if len(article.evidence) >= source.get('minimum_evidence_characters', 100): articles[url] = article
                     except ValueError: continue
                 LOG.info('Collected RSS source=%s cumulative=%d', source['name'], len(articles))
             except (httpx.HTTPError, ValueError) as exc:
@@ -196,18 +213,23 @@ def collect(config, now=None, client=None):
     domains = list({d for source in config['sources'] for d in source.get('domains', [])} | set(gdelt['publishers']))
     def enrich(article):
         try:
-            body, published = publisher_page(client, article.url, domains)
+            body, published, description, headline = publisher_page(client, article.url, domains, with_metadata=True)
             # Some RSS pubDate fields track updates. Prefer the publisher's
             # original publication metadata, even when it makes coverage stale.
             if published:
                 article.published = published.isoformat()
+            if not article.publisher_excerpt and description and headline:
+                # Metadata is original publisher text, not a discovery-service summary.
+                article.title = headline
+                article.publisher_excerpt = description
+                article.evidence = (headline + '. ' + description + ' ' + article.evidence)[:6000]
             if len(body) >= 300: article.evidence = (article.evidence + ' ' + body)[:6000]
         except (httpx.HTTPError, ValueError): pass
         return article
     try:
         with ThreadPoolExecutor(max_workers=8) as pool:
             enriched = list(pool.map(enrich, balanced))
-        return [a for a in enriched if is_fresh(a, now, hours) and len(a.evidence) >= (300 if a.method == 'gdelt_discovery_time' else 100)], failures
+        return [a for a in enriched if is_fresh(a, now, hours) and len(a.evidence) >= (300 if a.method == 'gdelt_discovery_time' else config['newsletter'].get('minimum_evidence_characters',100))], failures
     finally:
         if owns: client.close()
 

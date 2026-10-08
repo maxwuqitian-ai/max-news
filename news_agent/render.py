@@ -18,7 +18,7 @@ TEMPLATE = '''<!doctype html><html lang="zh-Hans"><head><meta charset="utf-8"><m
 
 {% for section in sections %}<h2>{{ section.label }} · {{ section.stories|length }} 条</h2>
 {% for story in section.stories %}<section class="story" style="border-top:1px solid #dde3eb;padding:12px 0"><h3>{{ story.number }}. {{ story.headline }}</h3>
-{% for claim in story.claims %}<p style="font-size:16px;line-height:1.9">{{ claim.text }}</p>{% endfor %}
+{% for claim in story.claims if claim.placement != 'headline' %}<p style="font-size:16px;line-height:1.9">{{ claim.text }}</p>{% endfor %}
 <p class="meta">原始报道：{% for source in story.sources %}<a href="{{ source.url }}">{{ source.name }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p></section>{% endfor %}{% endfor %}
 </div></body></html>'''
 
@@ -61,7 +61,7 @@ def render(edition, subject, test=False, section_order=None):
         lines += [f"【{section['label']}】", '']
         for story in section['stories']:
             lines += [f"{story['number']}. {story['headline']}"]
-            lines += [c['text'] for c in story['claims']]
+            lines += [c['text'] for c in story['claims'] if c.get('placement') != 'headline']
             lines += [f"来源：{s['name']} {s['url']}" for s in story['sources']]
             lines += ['']
     return html, '\n'.join(lines)

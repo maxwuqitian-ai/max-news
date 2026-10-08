@@ -64,13 +64,16 @@ jobs:
         run: |
           python - <<'PY'
           import os
+          from hashlib import sha256
           from news_agent.config import load
           from news_agent.cli import preparation_due
           manual = os.environ['EVENT'] == 'workflow_dispatch'
           mode = os.environ.get('MODE') if manual else 'daily'
-          enabled = manual and mode in ('preview', 'send-test') or preparation_due(load('config.yaml'))
+          config = load('config.yaml')
+          enabled = manual and mode in ('preview', 'send-test') or preparation_due(config)
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               f.write(f'enabled={str(enabled).lower()}\nmode={mode}\n')
+              f.write('model_key=' + sha256(config['model']['name'].encode()).hexdigest()[:16] + '\n')
           PY
       - name: Restore local model cache
         id: model_cache
@@ -80,7 +83,7 @@ jobs:
           path: |
             .tools/ollama
             .models
-          key: ollama-linux-amd64-0.40.1-${{ hashFiles('config.yaml', 'scripts/install_ollama.sh') }}
+          key: ollama-linux-amd64-0.40.1-${{ steps.gate.outputs.model_key }}-${{ hashFiles('scripts/install_ollama.sh') }}
       - name: Check email credentials before generation
         if: steps.gate.outputs.enabled == 'true' && steps.gate.outputs.mode != 'preview'
         run: |

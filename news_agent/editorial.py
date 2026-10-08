@@ -99,6 +99,9 @@ def normalized(text): return re.sub(r'\s+', ' ', text).strip()
 
 
 def validate(edition, articles, config, edition_date, *, enforce_balance=True):
+    if config['editorial'].get('mode') == 'publisher_chinese_excerpt':
+        from .publisher_excerpt import verify_story
+        for story in edition.get('stories', []): verify_story(story, articles)
     n = config['newsletter']
     if edition.get('date') != edition_date: raise EditorialError('Edition date mismatch')
     stories = edition.get('stories', [])

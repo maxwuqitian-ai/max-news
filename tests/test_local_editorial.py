@@ -288,3 +288,36 @@ def test_writer_requires_main_claim_support_from_each_provided_report(artifacts)
     story['claims']['fact']['evidence']['s1'] = []
     with pytest.raises(EditorialError,match='every provided source'):
         resolve_story(story,event,aliases,passages)
+
+
+@pytest.mark.parametrize('invented', [False, True])
+def test_grounded_translation_sees_selected_quotes_only(invented):
+    from news_agent.local_editorial import grounded_draft
+    passages = {'s0':{'p0':'Officials announced a tax cut.', 'p1':'The law takes effect next month.',
+                      'p2':'An unrelated report describes a different event.'}}
+    payload = {'edition_date':'2026-10-08','as_of':'2026-10-08T12:00:00+00:00',
+               'event':{'event_key':'tax_cut','category':'economics'},
+               'articles':[{'id':'s0','publisher':'BBC','passages':passages['s0']}]}
+    class FakeModel:
+        translations = 0
+        def ask(self, system, request):
+            if request['task'].startswith('Select evidence'):
+                return {'fact':{'s0':['invented' if invented else 'p0']},'context':{'s0':['p1']},
+                        'freshness':{'article_id':'s0','passage_id':'p0'},'is_conflict':False,
+                        'cross_check':{'status':'single_source','note':'一个报道来源'}}
+            self.translations += 1
+            assert request['paragraph_evidence'] == {
+                'fact':[{'publisher':'BBC','quote':passages['s0']['p0']}],
+                'context':[{'publisher':'BBC','quote':passages['s0']['p1']}]}
+            assert 'unrelated' not in str(request)
+            return {'headline':'税收政策调整','fact':'据BBC报道，当局宣布减税。',
+                    'context':'新法下月生效。','development':'当局宣布减税。'}
+    model = FakeModel()
+    if invented:
+        with pytest.raises(EditorialError,match='unavailable passage'):
+            grounded_draft(model,payload,{'s0':'actual-id'},passages)
+        assert model.translations == 0
+    else:
+        story = grounded_draft(model,payload,{'s0':'actual-id'},passages)
+        assert story['claims']['fact']['evidence'] == {'s0':['p0']}
+        assert model.translations == 1

@@ -7,6 +7,9 @@ newsletter:
   lookback_hours: 24
   max_edition_age_hours: 4
   max_candidates: 100
+  minimum_evidence_characters: 50
+  max_per_feed: 40
+  freshness_buffer_minutes: 45
   subject: '全球每日新闻'
   output_dir: output
   state_dir: state
@@ -19,17 +22,26 @@ model:
   base_url: http://127.0.0.1:11434
   name: qwen3.5:9b
   thinking: false
+  grounded_translation: true
   api_key_env: null # local inference requires no API key
   timeout_seconds: 1800
   context_size: 16384
   max_output_tokens: 4000
   selection_batch_size: 20
-  selection_excerpt_characters: 240
+  selection_excerpt_characters: 100
   selection_attempts: 3
   story_attempts: 2
   cache_dir: output/.model-cache
   cache_ttl_seconds: 14400
 sources:
+  - {name: 中央社财经, family: CNA, url: 'https://feeds.feedburner.com/rsscna/finance', domains: [cna.com.tw], minimum_evidence_characters: 50}
+  - {name: 中央社国际, family: CNA, url: 'https://feeds.feedburner.com/rsscna/intworld', domains: [cna.com.tw], minimum_evidence_characters: 50}
+  - {name: FT中文网, family: FT, url: 'https://www.ftchinese.com/rss/news', domains: [ftchinese.com], minimum_evidence_characters: 50}
+  - {name: 纽约时报中文网, family: NYT, url: 'https://cn.nytimes.com/rss/', domains: [cn.nytimes.com], minimum_evidence_characters: 50}
+  - {name: BBC中文, family: BBC, url: 'https://feeds.bbci.co.uk/zhongwen/simp/rss.xml', domains: [bbc.com, bbc.co.uk], minimum_evidence_characters: 50}
+  - {name: 德国之声中文, family: DW, url: 'https://rss.dw.com/rdf/rss-chi-all', domains: [dw.com], minimum_evidence_characters: 50}
+  - {name: 法国国际广播电台, family: RFI, url: 'https://www.rfi.fr/cn/rss', domains: [rfi.fr], minimum_evidence_characters: 50}
+  - {name: 科技新报, family: TechNews, url: 'https://technews.tw/feed/', domains: [technews.tw], minimum_evidence_characters: 50, exclude_title_pattern: '月[營营]收'}
   - {name: BBC, family: BBC, url: 'https://feeds.bbci.co.uk/news/world/rss.xml', domains: [bbc.com, bbc.co.uk]}
   - {name: BBC US, family: BBC, url: 'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml', domains: [bbc.com, bbc.co.uk]}
   - {name: The Guardian Business, family: Guardian, url: 'https://www.theguardian.com/uk/business/rss', domains: [theguardian.com]}
@@ -44,9 +56,15 @@ gdelt:
   enabled: true
   url: https://api.gdeltproject.org/api/v2/doc/doc
   # GDELT adds multilingual discovery, never an unverified fact source.
-  query: '(sourcelang:english OR sourcelang:chinese OR sourcelang:spanish OR sourcelang:french) (domain:reuters.com OR domain:apnews.com OR domain:bbc.com OR domain:theguardian.com OR domain:scmp.com OR domain:aljazeera.com)'
+  query: '(sourcelang:english OR sourcelang:chinese OR sourcelang:spanish OR sourcelang:french) (domain:reuters.com OR domain:apnews.com OR domain:bbc.com OR domain:theguardian.com OR domain:scmp.com OR domain:aljazeera.com OR domain:cna.com.tw OR domain:ftchinese.com OR domain:cn.nytimes.com OR domain:rfi.fr OR domain:dw.com OR domain:technews.tw)'
   max_records: 75
   publishers:
+    cna.com.tw: {name: 中央社, family: CNA}
+    ftchinese.com: {name: FT中文网, family: FT}
+    cn.nytimes.com: {name: 纽约时报中文网, family: NYT}
+    rfi.fr: {name: 法国国际广播电台, family: RFI}
+    dw.com: {name: 德国之声中文, family: DW}
+    technews.tw: {name: 科技新报, family: TechNews}
     reuters.com: {name: Reuters, family: Reuters}
     apnews.com: {name: Associated Press, family: AP}
     bbc.com: {name: BBC, family: BBC}
@@ -54,6 +72,7 @@ gdelt:
     scmp.com: {name: SCMP, family: SCMP}
     aljazeera.com: {name: Al Jazeera, family: AlJazeera}
 editorial:
+  mode: publisher_chinese_excerpt
   focus: [politics, economics, companies, mergers_and_acquisitions, technology, major_china_us_news]
   # Topic balance, not country quotas; never fill gaps with stale or low-impact items.
   section_order: [politics, economics, business, technology]
