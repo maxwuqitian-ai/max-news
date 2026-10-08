@@ -55,6 +55,8 @@ def test_local_pipeline_reviews_every_story_and_final_edition(config, artifacts)
                 return {'checks': {e['event_key']: {'genre': 'breaking_news', 'category': e['category'], 'all_sources_cover_this_event': True,
                     'new_development': True, 'importance_level': 'major_sector', 'duplicate_of': 'none', 'reason': 'Synthetic test assessment'} for e in payload['events']}}
             if payload['task'].startswith('Verify this single story'):
+                assert payload['edition_date'] == edition['date']
+                assert payload['as_of'] == edition['as_of']
                 assert 'story' not in payload
                 assert all('evidence' not in a for a in payload['articles'])
                 assert payload['published_story']['paragraphs']
