@@ -1,0 +1,66 @@
+全球每日新闻 · 10月7日早上7:30回看样刊
+汉诺威，新罕布什尔州｜07:00温度回看 -2.1°C｜当日降雨/雪概率 3%（最高小时值；模型回看数据，并非当时发布的预报）
+天气对应时间：2026-10-07 07:00（纽约时间） · Open-Meteo https://api.open-meteo.com/v1/forecast?latitude=43.7022&longitude=-72.2896&hourly=temperature_2m%2Cprecipitation_probability&timezone=America%2FNew_York&start_date=2026-10-07&end_date=2026-10-07
+2026-10-07 · 10 条重要新闻 · 约3分钟阅读
+新闻截止时间：2026-10-07 07:30（纽约时间）；新进展依据过去24小时发表的报道。
+
+历史样刊：回看10月7日纽约时间早上7:30的样刊，现在发送。只选用截稿前24小时内发表的报道；正文按现可获取的报道整理，不能保证与当时网页版本完全相同。天气为事后获取的模型回看数据。
+
+【政治与国际关系】
+
+1. 斯里兰卡前第一夫人因捐款案被捕
+斯里兰卡反腐部门逮捕前第一夫人希兰蒂·拉贾帕克萨，调查一家相关慈善机构是否挪用了儿童医院捐款。
+她否认违法，表示资金没有被挪用。目前报道的是调查与指控，尚不能认定她有罪。
+来源：BBC https://www.bbc.co.uk/news/articles/ck0e0n3xzvp4o?at_medium=RSS&at_campaign=rss（发表时间：2026-10-07 05:49，纽约时间）
+
+【经济与市场】
+
+2. IMF总裁警告：债务与借款成本持续攀升
+IMF总裁格奥尔基耶娃呼吁主要经济体收紧财政。她表示，债券收益率上涨正在增加政府预算压力。
+她说，全球债务占GDP的比例处于二战以来最高水平，并可能在未来几年达到100%。这是她对债务趋势的判断。
+来源：The Guardian Business https://www.theguardian.com/business/2026/oct/07/imf-chief-kristalina-georgieva-urges-governments-tighten-belts-global-debt-levels-soar（发表时间：2026-10-07 06:14，纽约时间）
+
+3. 英国9月房价停滞，房贷成本压制市场
+劳埃德银行公布的指数显示，英国9月平均房价为298,441英镑，与上月和一年前基本持平。
+五年期固定房贷的平均利率已升至6%，为三年来首次。贷款成本上升，增加了买房和续贷的负担。
+来源：The Guardian Business https://www.theguardian.com/business/2026/oct/07/uk-house-prices-flatline-as-rising-mortgage-costs-weigh-on-market（发表时间：2026-10-07 03:56，纽约时间）
+
+4. 欧盟赴华谈贸易，聚焦混合动力汽车出口
+欧盟贸易谈判团队周三赴中国，计划周四、周五展开磋商，重点之一是中国混合动力汽车对欧洲的出口。
+欧盟此前对中国纯电动车加征关税，但混合动力汽车未受同类关税限制，随后出口增加。目前尚未宣布达成协议。
+来源：The Guardian https://www.theguardian.com/business/2026/oct/07/eu-negotiators-head-to-china-hoping-to-curb-cheap-imports-of-hybrid-electric-cars（发表时间：2026-10-07 00:00，纽约时间）
+
+【公司与商业】
+
+5. 皇家邮政拟裁减最多2,500个岗位
+皇家邮政计划裁减最多2,500个岗位，主要涉及总部和支持职能，重组拟在明年年底前完成。
+公司称不会减少投递和处理业务的一线岗位，裁员将通过自然减员和自愿离职进行。背景是信件量持续下降和竞争加剧。
+来源：The Guardian Business https://www.theguardian.com/business/2026/oct/07/royal-mail-to-cut-jobs-restructure-fall-in-letter-deliveries（发表时间：2026-10-07 07:23，纽约时间）
+
+6. 壳牌预计炼油利润率明显上升
+壳牌在交易更新中预计，第三季度每桶炼油利润率为42美元，高于第二季度的24美元。这是预估值。
+《卫报》将这一变化与燃料短缺、成品油价格上涨联系起来。每桶利润率上升，并不等于公司整体利润已经翻倍。
+来源：The Guardian Business https://www.theguardian.com/business/2026/oct/07/shell-refineries-forecast-to-make-double-the-profit-from-every-barrel-of-fuel（发表时间：2026-10-07 04:30，纽约时间）
+
+7. Equinor警告：英国油气项目审批影响后续投资
+挪威能源公司Equinor表示，如果英国不批准Rosebank和Jackdaw油气项目，公司可能停止进一步在英国投资。
+英国政府仍在决定是否给予最终开采许可，并表示会考虑相关证据。公司目前发出的是条件性警告。
+来源：BBC Business https://www.bbc.co.uk/news/articles/c6zxjrekg29zo?at_medium=RSS&at_campaign=rss（发表时间：2026-10-06 19:01，纽约时间）
+
+8. 派拉蒙完成收购华纳兄弟探索
+BBC和Ars Technica均报道，派拉蒙Skydance已完成收购华纳兄弟探索，两家大型好莱坞制片集团合并。
+交易将HBO、CBS、CNN等业务纳入同一集团。此前法律争议和竞争担忧持续数月；集团整合仍会影响影视与流媒体业务。
+来源：BBC Business https://www.bbc.co.uk/news/articles/cxj0604d33qzo?at_medium=RSS&at_campaign=rss（发表时间：2026-10-06 08:55，纽约时间）
+来源：Ars Technica https://arstechnica.com/tech-policy/2026/10/paramount-completes-111b-warner-merger-creating-skydance-behemoth/（发表时间：2026-10-06 13:33，纽约时间）
+
+【科技与AI】
+
+9. OpenAI宣布在欧盟默认标记ChatGPT生成文本
+Ars Technica报道，OpenAI宣布将在欧盟默认为ChatGPT生成文本加入水印；其他地区也将提供这一功能，但默认关闭。
+报道将此举与欧盟AI法案的内容标记要求联系起来。现有标记技术仍不完全可靠，不能把水印当作绝对的识别保证。
+来源：Ars Technica https://arstechnica.com/ai/2026/10/openai-will-watermark-chatgpt-outputs-by-default-but-only-in-the-eu/（发表时间：2026-10-06 16:50，纽约时间）
+
+10. 芬兰要求暂停两个谷歌数据中心的相关施工
+芬兰监管部门因森林清理和环境评估问题，要求暂停两个计划中的谷歌数据中心的相关施工。
+监管部门称，其中一个地点未完成强制环境影响评估。谷歌承认此次未达到自身标准，并表示会遵循监管指引。
+来源：BBC Technology https://www.bbc.co.uk/news/articles/cvj6jkx6g1r0o?at_medium=RSS&at_campaign=rss（发表时间：2026-10-06 13:15，纽约时间）

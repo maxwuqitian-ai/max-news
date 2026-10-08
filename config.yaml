@@ -1,0 +1,70 @@
+newsletter:
+  timezone: America/New_York
+  target_time: '08:00'
+  preparation_minutes: 75
+  min_stories: 10
+  max_stories: 15
+  lookback_hours: 24
+  max_edition_age_hours: 4
+  max_candidates: 100
+  subject: '全球每日新闻'
+  output_dir: output
+  state_dir: state
+  # Keep disabled until a reviewed sample and manual inbox test both succeed.
+  delivery_enabled: false
+  recipient_env: NEWS_RECIPIENT
+model:
+  provider: ollama
+  base_url: http://127.0.0.1:11434
+  name: qwen2.5:7b
+  api_key_env: null # local inference requires no API key
+  timeout_seconds: 900
+  context_size: 32768
+  max_output_tokens: 6000
+sources:
+  - {name: BBC, family: BBC, url: 'https://feeds.bbci.co.uk/news/world/rss.xml', domains: [bbc.com, bbc.co.uk]}
+  - {name: BBC US, family: BBC, url: 'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml', domains: [bbc.com, bbc.co.uk]}
+  - {name: The Guardian Business, family: Guardian, url: 'https://www.theguardian.com/uk/business/rss', domains: [theguardian.com]}
+  - {name: BBC Technology, family: BBC, url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', domains: [bbc.com, bbc.co.uk]}
+  - {name: BBC Business, family: BBC, url: 'https://feeds.bbci.co.uk/news/business/rss.xml', domains: [bbc.com, bbc.co.uk]}
+  - {name: NPR, family: NPR, url: 'https://feeds.npr.org/1001/rss.xml', domains: [npr.org]}
+  - {name: The Guardian, family: Guardian, url: 'https://www.theguardian.com/world/rss', domains: [theguardian.com]}
+  - {name: Al Jazeera, family: AlJazeera, url: 'https://www.aljazeera.com/xml/rss/all.xml', domains: [aljazeera.com]}
+  - {name: SCMP, family: SCMP, url: 'https://www.scmp.com/rss/91/feed', domains: [scmp.com]}
+  - {name: Ars Technica, family: Ars, url: 'https://feeds.arstechnica.com/arstechnica/index', domains: [arstechnica.com]}
+gdelt:
+  enabled: true
+  url: https://api.gdeltproject.org/api/v2/doc/doc
+  # GDELT adds multilingual discovery, never an unverified fact source.
+  query: '(sourcelang:english OR sourcelang:chinese OR sourcelang:spanish OR sourcelang:french) (domain:reuters.com OR domain:apnews.com OR domain:bbc.com OR domain:theguardian.com OR domain:scmp.com OR domain:aljazeera.com)'
+  max_records: 75
+  publishers:
+    reuters.com: {name: Reuters, family: Reuters}
+    apnews.com: {name: Associated Press, family: AP}
+    bbc.com: {name: BBC, family: BBC}
+    theguardian.com: {name: The Guardian, family: Guardian}
+    scmp.com: {name: SCMP, family: SCMP}
+    aljazeera.com: {name: Al Jazeera, family: AlJazeera}
+editorial:
+  focus: [politics, economics, companies, mergers_and_acquisitions, technology, major_china_us_news]
+  # Topic balance, not country quotas; never fill gaps with stale or low-impact items.
+  section_order: [politics, economics, business, technology]
+  selection_style: flexible_by_daily_newsworthiness
+  minimum_sections: 3
+  politics_world_max_share: 0.4
+  conflict_max_share: 0.2
+  technology_max_share: 0.35
+  style: informative_news_minimal_presentation
+  summary_min_characters: 40
+  summary_max_characters: 260
+email:
+  provider: resend
+  resend_api_key_env: RESEND_API_KEY
+  sender_env: NEWS_SENDER
+weather:
+  enabled: true
+  location: 汉诺威，新罕布什尔州
+  latitude: 43.7022
+  longitude: -72.2896
+  url: https://api.open-meteo.com/v1/forecast
+  next_day_after_hour: 18

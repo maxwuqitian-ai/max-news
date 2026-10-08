@@ -1,0 +1,613 @@
+{
+  "date": "2026-10-07",
+  "as_of": "2026-10-07T11:30:00+00:00",
+  "stories": [
+    {
+      "event_key": "011531fb33b1d586",
+      "headline": "斯里兰卡前第一夫人因捐款案被捕",
+      "category": "politics",
+      "is_conflict": false,
+      "article_ids": [
+        "011531fb33b1d586"
+      ],
+      "freshness": {
+        "development": "斯里兰卡前第一夫人因捐款案被捕",
+        "article_id": "011531fb33b1d586",
+        "quote": "Sri Lanka's former first lady Shiranthi Rajapaksa has been arrested over allegations that a charity she is linked to misused donations raised for a children's hospital."
+      },
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "斯里兰卡反腐部门逮捕前第一夫人希兰蒂·拉贾帕克萨，调查一家相关慈善机构是否挪用了儿童医院捐款。",
+          "evidence": [
+            {
+              "article_id": "011531fb33b1d586",
+              "quote": "Sri Lanka's former first lady Shiranthi Rajapaksa has been arrested over allegations that a charity she is linked to misused donations raised for a children's hospital."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "她否认违法，表示资金没有被挪用。目前报道的是调查与指控，尚不能认定她有罪。",
+          "evidence": [
+            {
+              "article_id": "011531fb33b1d586",
+              "quote": "Shiranthi Rajapaksa has denied any wrongdoing and says the money has not been appropriated."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "single_source",
+        "note": "依据列出的出版方报道整理，未宣称已全面独立核实。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "011531fb33b1d586",
+          "name": "BBC",
+          "url": "https://www.bbc.co.uk/news/articles/ck0e0n3xzvp4o?at_medium=RSS&at_campaign=rss",
+          "time": "2026-10-07T09:49:31.483000+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "e0ac24010e865072",
+      "headline": "IMF总裁警告：债务与借款成本持续攀升",
+      "category": "economics",
+      "is_conflict": false,
+      "article_ids": [
+        "e0ac24010e865072"
+      ],
+      "freshness": {
+        "development": "IMF总裁警告：债务与借款成本持续攀升",
+        "article_id": "e0ac24010e865072",
+        "quote": "The head of the International Monetary Fund has called on governments across big economies to tighten their belts as soaring bond yields hit budgets."
+      },
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "IMF总裁格奥尔基耶娃呼吁主要经济体收紧财政。她表示，债券收益率上涨正在增加政府预算压力。",
+          "evidence": [
+            {
+              "article_id": "e0ac24010e865072",
+              "quote": "The head of the International Monetary Fund has called on governments across big economies to tighten their belts as soaring bond yields hit budgets."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "她说，全球债务占GDP的比例处于二战以来最高水平，并可能在未来几年达到100%。这是她对债务趋势的判断。",
+          "evidence": [
+            {
+              "article_id": "e0ac24010e865072",
+              "quote": "Speaking in Singapore, the IMF’s managing director, Kristalina Georgieva, said global debt-to-GDP ratios were at their highest level since the second world war and on course to hit 100% in the coming years."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "single_source",
+        "note": "依据列出的出版方报道整理，未宣称已全面独立核实。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "e0ac24010e865072",
+          "name": "The Guardian Business",
+          "url": "https://www.theguardian.com/business/2026/oct/07/imf-chief-kristalina-georgieva-urges-governments-tighten-belts-global-debt-levels-soar",
+          "time": "2026-10-07T10:14:35+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "6e8eac921d2cba4d",
+      "headline": "英国9月房价停滞，房贷成本压制市场",
+      "category": "economics",
+      "is_conflict": false,
+      "article_ids": [
+        "6e8eac921d2cba4d"
+      ],
+      "freshness": {
+        "development": "英国9月房价停滞，房贷成本压制市场",
+        "article_id": "6e8eac921d2cba4d",
+        "quote": "The average cost of a home was £298,441, roughly the same as it was a year earlier and in the previous month, according to the tracker from Lloyds previously known as the Halifax HPI."
+      },
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "劳埃德银行公布的指数显示，英国9月平均房价为298,441英镑，与上月和一年前基本持平。",
+          "evidence": [
+            {
+              "article_id": "6e8eac921d2cba4d",
+              "quote": "The average cost of a home was £298,441, roughly the same as it was a year earlier and in the previous month, according to the tracker from Lloyds previously known as the Halifax HPI."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "五年期固定房贷的平均利率已升至6%，为三年来首次。贷款成本上升，增加了买房和续贷的负担。",
+          "evidence": [
+            {
+              "article_id": "6e8eac921d2cba4d",
+              "quote": "On Monday the average cost of a five-year fixed-rate mortgage reached 6% for the first time in three years . Rising mortgage rates are bad news for borrowers whose fixed-rate deals are ending, as well as prospective buyers"
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "single_source",
+        "note": "依据列出的出版方报道整理，未宣称已全面独立核实。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "6e8eac921d2cba4d",
+          "name": "The Guardian Business",
+          "url": "https://www.theguardian.com/business/2026/oct/07/uk-house-prices-flatline-as-rising-mortgage-costs-weigh-on-market",
+          "time": "2026-10-07T07:56:02+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "5172919a9c2680e9",
+      "headline": "欧盟赴华谈贸易，聚焦混合动力汽车出口",
+      "category": "economics",
+      "is_conflict": false,
+      "article_ids": [
+        "5172919a9c2680e9"
+      ],
+      "freshness": {
+        "development": "欧盟赴华谈贸易，聚焦混合动力汽车出口",
+        "article_id": "5172919a9c2680e9",
+        "quote": "Trade commissioner Maroš Šefčovič and his team fly out on Wednesday and will be negotiating up to the wire in talks scheduled to start the following day and continue late into Friday."
+      },
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "欧盟贸易谈判团队周三赴中国，计划周四、周五展开磋商，重点之一是中国混合动力汽车对欧洲的出口。",
+          "evidence": [
+            {
+              "article_id": "5172919a9c2680e9",
+              "quote": "Trade commissioner Maroš Šefčovič and his team fly out on Wednesday and will be negotiating up to the wire in talks scheduled to start the following day and continue late into Friday."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "欧盟此前对中国纯电动车加征关税，但混合动力汽车未受同类关税限制，随后出口增加。目前尚未宣布达成协议。",
+          "evidence": [
+            {
+              "article_id": "5172919a9c2680e9",
+              "quote": "after the EU imposed tariffs on Chinese electric vehicles in October 2024 there was a boom in exports of hybrid cars , which were not subject to tariffs."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "single_source",
+        "note": "依据列出的出版方报道整理，未宣称已全面独立核实。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "5172919a9c2680e9",
+          "name": "The Guardian",
+          "url": "https://www.theguardian.com/business/2026/oct/07/eu-negotiators-head-to-china-hoping-to-curb-cheap-imports-of-hybrid-electric-cars",
+          "time": "2026-10-07T04:00:34+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "bd0b43f4aada691d",
+      "headline": "皇家邮政拟裁减最多2,500个岗位",
+      "category": "business",
+      "is_conflict": false,
+      "article_ids": [
+        "bd0b43f4aada691d"
+      ],
+      "freshness": {
+        "development": "皇家邮政拟裁减最多2,500个岗位",
+        "article_id": "bd0b43f4aada691d",
+        "quote": "The postal service, which has been fined a total of £37m since 2023 for missing delivery targets set by the regulator Ofcom, said the job cuts would focus on head office and “support function roles” with the restructure to be completed by the end of next year."
+      },
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "皇家邮政计划裁减最多2,500个岗位，主要涉及总部和支持职能，重组拟在明年年底前完成。",
+          "evidence": [
+            {
+              "article_id": "bd0b43f4aada691d",
+              "quote": "The postal service, which has been fined a total of £37m since 2023 for missing delivery targets set by the regulator Ofcom, said the job cuts would focus on head office and “support function roles” with the restructure to be completed by the end of next year."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "公司称不会减少投递和处理业务的一线岗位，裁员将通过自然减员和自愿离职进行。背景是信件量持续下降和竞争加剧。",
+          "evidence": [
+            {
+              "article_id": "bd0b43f4aada691d",
+              "quote": "Royal Mail said the cuts would be achieved through “natural attrition” and a voluntary exit programme with no compulsory redundancies. The company said there would be no reduction in operational frontline roles in delivery and processing"
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "single_source",
+        "note": "依据列出的出版方报道整理，未宣称已全面独立核实。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "bd0b43f4aada691d",
+          "name": "The Guardian Business",
+          "url": "https://www.theguardian.com/business/2026/oct/07/royal-mail-to-cut-jobs-restructure-fall-in-letter-deliveries",
+          "time": "2026-10-07T11:23:31+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "a0535c44da537b49",
+      "headline": "壳牌预计炼油利润率明显上升",
+      "category": "business",
+      "is_conflict": false,
+      "article_ids": [
+        "a0535c44da537b49"
+      ],
+      "freshness": {
+        "development": "壳牌预计炼油利润率明显上升",
+        "article_id": "a0535c44da537b49",
+        "quote": "In a trading update on Wednesday, the energy supermajor forecast profit margins of $42 a barrel in the July to September period, far above the margins of $24 a barrel in the second quarter."
+      },
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "壳牌在交易更新中预计，第三季度每桶炼油利润率为42美元，高于第二季度的24美元。这是预估值。",
+          "evidence": [
+            {
+              "article_id": "a0535c44da537b49",
+              "quote": "In a trading update on Wednesday, the energy supermajor forecast profit margins of $42 a barrel in the July to September period, far above the margins of $24 a barrel in the second quarter."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "《卫报》将这一变化与燃料短缺、成品油价格上涨联系起来。每桶利润率上升，并不等于公司整体利润已经翻倍。",
+          "evidence": [
+            {
+              "article_id": "a0535c44da537b49",
+              "quote": "Shell’s refineries are expected to make record profits on each barrel of fuel produced after shortages in the global market caused pump prices around the world to climb to all-time highs."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "single_source",
+        "note": "依据列出的出版方报道整理，未宣称已全面独立核实。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "a0535c44da537b49",
+          "name": "The Guardian Business",
+          "url": "https://www.theguardian.com/business/2026/oct/07/shell-refineries-forecast-to-make-double-the-profit-from-every-barrel-of-fuel",
+          "time": "2026-10-07T08:30:16+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "1bd12705676d9a97",
+      "headline": "Equinor警告：英国油气项目审批影响后续投资",
+      "category": "business",
+      "is_conflict": false,
+      "article_ids": [
+        "1bd12705676d9a97"
+      ],
+      "freshness": {
+        "development": "Equinor警告：英国油气项目审批影响后续投资",
+        "article_id": "1bd12705676d9a97",
+        "quote": "Oil giant Equinor has warned it may shun further investments in the UK if new oil and gas fields at Rosebank and Jackdaw are not approved."
+      },
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "挪威能源公司Equinor表示，如果英国不批准Rosebank和Jackdaw油气项目，公司可能停止进一步在英国投资。",
+          "evidence": [
+            {
+              "article_id": "1bd12705676d9a97",
+              "quote": "Oil giant Equinor has warned it may shun further investments in the UK if new oil and gas fields at Rosebank and Jackdaw are not approved."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "英国政府仍在决定是否给予最终开采许可，并表示会考虑相关证据。公司目前发出的是条件性警告。",
+          "evidence": [
+            {
+              "article_id": "1bd12705676d9a97",
+              "quote": "The warning comes as the UK government is set to decide whether or not to grant final approval to extract oil and gas at Rosebank and Jackdaw. The government said any decision would take into account all relevant evidence."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "single_source",
+        "note": "依据列出的出版方报道整理，未宣称已全面独立核实。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "1bd12705676d9a97",
+          "name": "BBC Business",
+          "url": "https://www.bbc.co.uk/news/articles/c6zxjrekg29zo?at_medium=RSS&at_campaign=rss",
+          "time": "2026-10-06T23:01:13.650000+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "4d1d06731004a185",
+      "headline": "派拉蒙完成收购华纳兄弟探索",
+      "category": "business",
+      "is_conflict": false,
+      "article_ids": [
+        "4d1d06731004a185",
+        "eef1695918d88cb6"
+      ],
+      "freshness": {
+        "development": "派拉蒙完成收购华纳兄弟探索",
+        "article_id": "4d1d06731004a185",
+        "quote": "Paramount Skydance has officially taken over Warner Bros Discovery"
+      },
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "BBC和Ars Technica均报道，派拉蒙Skydance已完成收购华纳兄弟探索，两家大型好莱坞制片集团合并。",
+          "evidence": [
+            {
+              "article_id": "4d1d06731004a185",
+              "quote": "Paramount Skydance has officially taken over Warner Bros Discovery"
+            },
+            {
+              "article_id": "eef1695918d88cb6",
+              "quote": "Paramount Skydance completed its $111 billion merger with Warner Bros. Discovery today"
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "交易将HBO、CBS、CNN等业务纳入同一集团。此前法律争议和竞争担忧持续数月；集团整合仍会影响影视与流媒体业务。",
+          "evidence": [
+            {
+              "article_id": "4d1d06731004a185",
+              "quote": "The takeover - merging two of the biggest studios in Los Angeles - comes after months of legal disputes and widespread criticism over feared cuts and consolidation could harm competition and consumers."
+            },
+            {
+              "article_id": "eef1695918d88cb6",
+              "quote": "streaming services Paramount+ and HBO Max, CBS, CNN"
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "not_independent",
+        "note": "两家出版方均报道交易完成；该事实可能共同源于公司公告，不将其视为独立调查核实。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "4d1d06731004a185",
+          "name": "BBC Business",
+          "url": "https://www.bbc.co.uk/news/articles/cxj0604d33qzo?at_medium=RSS&at_campaign=rss",
+          "time": "2026-10-06T12:55:35.250000+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        },
+        {
+          "id": "eef1695918d88cb6",
+          "name": "Ars Technica",
+          "url": "https://arstechnica.com/tech-policy/2026/10/paramount-completes-111b-warner-merger-creating-skydance-behemoth/",
+          "time": "2026-10-06T17:33:44+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "67d2baa10e8a3ba5",
+      "headline": "OpenAI宣布在欧盟默认标记ChatGPT生成文本",
+      "category": "technology",
+      "is_conflict": false,
+      "article_ids": [
+        "67d2baa10e8a3ba5"
+      ],
+      "freshness": {
+        "development": "OpenAI宣布在欧盟默认标记ChatGPT生成文本",
+        "article_id": "67d2baa10e8a3ba5",
+        "quote": "OpenAI will begin automatically watermarking text generated with ChatGPT in the European Union, the company has announced. It will also offer the watermarking feature in other regions, but it will be off by default outside of the EU."
+      },
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "Ars Technica报道，OpenAI宣布将在欧盟默认为ChatGPT生成文本加入水印；其他地区也将提供这一功能，但默认关闭。",
+          "evidence": [
+            {
+              "article_id": "67d2baa10e8a3ba5",
+              "quote": "OpenAI will begin automatically watermarking text generated with ChatGPT in the European Union, the company has announced. It will also offer the watermarking feature in other regions, but it will be off by default outside of the EU."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "报道将此举与欧盟AI法案的内容标记要求联系起来。现有标记技术仍不完全可靠，不能把水印当作绝对的识别保证。",
+          "evidence": [
+            {
+              "article_id": "67d2baa10e8a3ba5",
+              "quote": "The move in Europe is driven by a need to comply with the EU AI Act, which took effect in August. It requires marking content produced by AI models in a way that another tool can detect. Unfortunately, there is still no completely effective and reliable way to do that."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "single_source",
+        "note": "依据列出的出版方报道整理，未宣称已全面独立核实。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "67d2baa10e8a3ba5",
+          "name": "Ars Technica",
+          "url": "https://arstechnica.com/ai/2026/10/openai-will-watermark-chatgpt-outputs-by-default-but-only-in-the-eu/",
+          "time": "2026-10-06T20:50:32+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "f74f87d0584cad18",
+      "headline": "芬兰要求暂停两个谷歌数据中心的相关施工",
+      "category": "technology",
+      "is_conflict": false,
+      "article_ids": [
+        "f74f87d0584cad18"
+      ],
+      "freshness": {
+        "development": "芬兰要求暂停两个谷歌数据中心的相关施工",
+        "article_id": "f74f87d0584cad18",
+        "quote": "Finnish authorities have ordered a halt to building work at two planned Google data centres amid concerns over the clearance of more than 300 hectares of forest."
+      },
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "芬兰监管部门因森林清理和环境评估问题，要求暂停两个计划中的谷歌数据中心的相关施工。",
+          "evidence": [
+            {
+              "article_id": "f74f87d0584cad18",
+              "quote": "Finnish authorities have ordered a halt to building work at two planned Google data centres amid concerns over the clearance of more than 300 hectares of forest."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "监管部门称，其中一个地点未完成强制环境影响评估。谷歌承认此次未达到自身标准，并表示会遵循监管指引。",
+          "evidence": [
+            {
+              "article_id": "f74f87d0584cad18",
+              "quote": "The Finnish Supervisory Agency (LVV) said work at one site was carried out without a mandatory environmental impact assessment and ordered measures that would \"significantly alter the environment\" to be suspended by 23 October. Google said it had \"fallen short of our own high standards in this instance\" and would follow the agency's guidance."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "single_source",
+        "note": "依据列出的出版方报道整理，未宣称已全面独立核实。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "f74f87d0584cad18",
+          "name": "BBC Technology",
+          "url": "https://www.bbc.co.uk/news/articles/cvj6jkx6g1r0o?at_medium=RSS&at_campaign=rss",
+          "time": "2026-10-06T17:15:46.222000+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    }
+  ],
+  "sample_note": "回看10月7日纽约时间早上7:30的样刊，现在发送。只选用截稿前24小时内发表的报道；正文按现可获取的报道整理，不能保证与当时网页版本完全相同。天气为事后获取的模型回看数据。",
+  "editorial_mode": "manually_curated_retrospective_sample",
+  "model": "assistant-manual-source-audit",
+  "prepared_at": "2026-10-08T02:58:04.286799+00:00",
+  "weather": {
+    "status": "ok",
+    "location": "汉诺威，新罕布什尔州",
+    "data_mode": "retrospective_model",
+    "temperature_c": -2.1,
+    "precipitation_probability_percent": 3,
+    "current_time": "2026-10-07T07:00:00-04:00",
+    "retrieved_at": "2026-10-08T02:58:04.300139+00:00",
+    "source_url": "https://api.open-meteo.com/v1/forecast?latitude=43.7022&longitude=-72.2896&hourly=temperature_2m%2Cprecipitation_probability&timezone=America%2FNew_York&start_date=2026-10-07&end_date=2026-10-07",
+    "probability_definition": "maximum_hourly_precipitation_probability"
+  },
+  "review": {
+    "approved": true,
+    "issues": [],
+    "method": "manual comparison of each Chinese assertion with retrieved publisher evidence; retrospective limitations disclosed"
+  }
+}

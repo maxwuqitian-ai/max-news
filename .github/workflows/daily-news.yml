@@ -1,0 +1,137 @@
+name: Daily Chinese news
+on:
+  push:
+    branches: [main]
+  # GitHub cron is UTC. These cover both EST/EDT with a local-time gate below.
+  # Later ticks recover from runner delays; the durable ledger prevents duplicates.
+  schedule:
+    - cron: '45 10,11 * * *'
+    - cron: '0 12,13,14,15,16 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        type: choice
+        options: [preview, send-test, daily]
+        default: preview
+        description: Preview only, manual test, or gated daily delivery
+      test_id:
+        type: string
+        description: Stable test identity (required for send-test; reuse prevents duplicate emails)
+        required: false
+permissions:
+  contents: write # only used for the durable news-agent-state branch
+concurrency:
+  group: daily-news-delivery
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements.lock
+      - run: python -m pip install -r requirements.lock && python -m pip install --no-deps -e .
+      - run: python -m pytest -q
+  briefing:
+    needs: validate
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      NEWS_LLM_API_KEY: ${{ secrets.NEWS_LLM_API_KEY }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      NEWS_SENDER: ${{ secrets.NEWS_SENDER }}
+      NEWS_RECIPIENT: ${{ secrets.NEWS_RECIPIENT }}
+      GMAIL_CLIENT_ID: ${{ secrets.GMAIL_CLIENT_ID }}
+      GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
+      GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements.lock
+      - run: python -m pip install -r requirements.lock && python -m pip install --no-deps -e .
+      - name: Determine local schedule and manual mode
+        id: gate
+        env:
+          EVENT: ${{ github.event_name }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          python - <<'PY'
+          import os
+          from news_agent.config import load
+          from news_agent.cli import preparation_due
+          manual = os.environ['EVENT'] == 'workflow_dispatch'
+          mode = os.environ.get('MODE') if manual else 'daily'
+          enabled = manual and mode in ('preview', 'send-test') or preparation_due(load('config.yaml'))
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f'enabled={str(enabled).lower()}\nmode={mode}\n')
+          PY
+      - name: Restore local model cache
+        if: steps.gate.outputs.enabled == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            .tools/ollama
+            .models
+          key: ollama-linux-amd64-0.40.1-qwen2.5-7b-v1
+      - name: Check email credentials before generation
+        if: steps.gate.outputs.enabled == 'true' && steps.gate.outputs.mode != 'preview'
+        run: |
+          python - <<'PY'
+          import os
+          required = ('RESEND_API_KEY', 'NEWS_SENDER', 'NEWS_RECIPIENT')
+          missing = [name for name in required if not os.environ.get(name)]
+          if missing:
+              raise SystemExit('Missing GitHub Actions Secrets: ' + ', '.join(missing))
+          PY
+      - name: Start local model (no paid API key)
+        if: steps.gate.outputs.enabled == 'true'
+        run: |
+          ./scripts/install_ollama.sh
+          ./scripts/start_ollama.sh
+          OLLAMA_HOST=127.0.0.1:11434 .tools/ollama/bin/ollama pull qwen2.5:7b
+      - name: Initialize durable delivery state
+        if: steps.gate.outputs.enabled == 'true' && steps.gate.outputs.mode != 'preview'
+        run: python scripts/state_branch.py init
+      - name: Use durable state directory
+        if: steps.gate.outputs.enabled == 'true'
+        run: |
+          python - <<'PY'
+          import yaml
+          from pathlib import Path
+          config = yaml.safe_load(Path('config.yaml').read_text())
+          config['newsletter']['state_dir'] = '.news-state'
+          Path('runtime-config.yaml').write_text(yaml.safe_dump(config, allow_unicode=True))
+          PY
+      - name: Collect and review preview
+        if: steps.gate.outputs.enabled == 'true' && steps.gate.outputs.mode != 'daily'
+        run: python -m news_agent --config runtime-config.yaml preview
+      - name: Send manual test
+        if: steps.gate.outputs.enabled == 'true' && steps.gate.outputs.mode == 'send-test'
+        env:
+          TEST_ID: ${{ inputs.test_id }}
+        run: python -m news_agent --config runtime-config.yaml send-test --test-id "$TEST_ID"
+      - name: Run daily briefing
+        if: steps.gate.outputs.enabled == 'true' && steps.gate.outputs.mode == 'daily'
+        run: python -m news_agent --config runtime-config.yaml run
+      - name: Upload briefing and evidence
+        if: always() && steps.gate.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: briefing-${{ github.run_id }}
+          path: |
+            output/briefing.html
+            output/briefing.txt
+            output/edition.json
+            output/articles.json
+            output/collection-report.json
+          retention-days: 7
+          if-no-files-found: ignore
