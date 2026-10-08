@@ -24,6 +24,9 @@ claims, misleading headlines and false claims of independent corroboration. Expl
 and evidence when rejecting. An explicitly attributed finding is supported if the named publisher reported it.
 One reporting origin, including a joint investigation, is permitted with accurate attribution and a single-source
 or not-independent status; lack of a second origin is not itself grounds for rejection when unavailable.
+The statuses independent, single_source and not_independent are the valid schema values. Do not demand a new
+status name or treat a correctly disclosed single reporting origin as an error. Accept faithful paraphrases and
+ordinary Chinese synonyms unless they materially change a fact, uncertainty or attribution.
 Do not require extra background or proof not claimed by the summary. New findings about older/ongoing events
 can be fresh news; dated historical background must not be presented as a new event. Check that the freshness
 quote documents the newly reported finding/development. Political wording must be neutral and Chinese natural.
@@ -322,10 +325,12 @@ def write_story(config, articles, date, model, event, as_of):
                        'Use only supplied source IDs and passage IDs in citations; cite all passages needed for EVERY assertion. '
                        'Every assertion in each paragraph must be supported by that paragraph\'s cited passages. '
                        'Begin the main paragraph with attribution to the supplied publisher(s), such as 据BBC报道. '
+                       'Anonymous sources quoted by a publisher are not an official government statement; use 据报道 or 据调查 rather than 美方称 unless an official actually made that statement. '
+                       'Translate protection/harbouring as 保护 or 提供藏身处; do not imply a legal asylum status without evidence. '
                        'Keep investigative or disputed findings attributed; do not turn reporting into independently established fact. '
                        'A joint investigation is one reporting origin, not independent corroboration. '
                        'The freshness passage must document the new announcement, decision, data, transaction or investigative finding, not old biography or background. '
-                       'Do not copy quotes or append annotations. Use established Chinese place names; retain original names if unsure. '
+                       'Do not copy quotes or append annotations. Use established Chinese place names. Preserve Latin-script personal names exactly as printed in the source unless the source provides a Chinese rendering. '
                        'Set is_conflict true for armed conflict. A single provided report is single_source, never independently cross-checked. '
                        'Return {"story": {...}}.',
                'event': {'event_key': event['event_key'], 'category': event['category']},
