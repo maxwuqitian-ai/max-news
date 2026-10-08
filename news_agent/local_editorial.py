@@ -34,11 +34,11 @@ def story_schema(aliases):
 
 def selection_audit_schema(events):
     check = object_schema({
-        'genre': {'type': 'string', 'enum': ['breaking_news', 'explainer', 'recap', 'opinion', 'sports', 'entertainment', 'personal_interest']},
+        'genre': {'type': 'string', 'enum': ['breaking_news', 'explainer', 'recap', 'opinion', 'profile']},
         'reason': {'type': 'string'},
-        'category': {'type': 'string', 'enum': ['politics', 'economics', 'business', 'technology', 'world']},
+        'category': {'type': 'string', 'enum': ['politics', 'economics', 'business', 'technology', 'world', 'sports', 'entertainment', 'personal_interest']},
         'all_sources_cover_this_event': {'type': 'boolean'}, 'new_development': {'type': 'boolean'},
-        'globally_consequential': {'type': 'boolean'},
+        'importance_level': {'type': 'string', 'enum': ['major_international', 'major_national', 'major_sector', 'minor_local']},
         'duplicate_of': {'type': 'string', 'enum': ['none'] + [e['event_key'] for e in events]}})
     return object_schema({'checks': object_schema({e['event_key']: check for e in events})})
 
@@ -50,7 +50,8 @@ def validate_selection_audit(audit, events):
     for event in events:
         c = checks[event['event_key']]
         if (not isinstance(c, dict) or c.get('genre') != 'breaking_news' or c.get('category') != event['category']
-                or any(c.get(k) is not True for k in ('all_sources_cover_this_event', 'new_development', 'globally_consequential'))
+                or any(c.get(k) is not True for k in ('all_sources_cover_this_event', 'new_development'))
+                or c.get('importance_level') not in ('major_international', 'major_national', 'major_sector')
                 or c.get('duplicate_of') != 'none' or not c.get('reason')):
             issues.append(f"{event['event_key']}: {c}")
     if issues: raise EditorialError('Selection review failed: ' + '; '.join(issues))
@@ -160,18 +161,26 @@ def generate_local(config, articles, date, model, as_of):
         events = decode_selection(selected, aliases, config)
         audit = model.ask(RANK_SYSTEM, {
             'task': 'Audit the selected events BEFORE writing. Assess EACH separately: genre, category, '
-                    'all_sources_cover_this_event, new_development, globally_consequential, duplicate_of and reason. '
+                    'all_sources_cover_this_event, new_development, importance_level, duplicate_of and reason. '
                     'all_sources_cover_this_event checks sources WITHIN this individual event; it is true for a matching single-source event. '
                     'Different selected events should be distinct. Reject unrelated merged sources, sports, minor features, '
                     'recaps, opinions, explainers and misclassified categories. A cricket fixture is sports, never business. '
-                    'Company transactions/earnings/operations are business; government diplomatic/legal policy actions are politics; '
+                    'Company transactions/earnings/operations are business, including chipmaker profits driven by AI demand;  government diplomatic/legal policy actions are politics; '
                     'macroeconomic data, financial markets and trade are economics. Require an actual substantive new development '
-                    'and a major global consequence. Explain the evidence behind each judgment. '
+                    'and importance beyond minor local interest. Major national economic/policy news, major company earnings/acquisitions, '
+                    'and significant global technology developments qualify; every story need not change the entire world. '
+                    'Explain the evidence behind each judgment. '
                     'Return checks keyed by event_key; duplicate_of is none unless this repeats another selected event.',
             'genre_definitions': {'breaking_news': 'factual report of a substantive new announcement, decision, transaction, data release or verified change',
                 'explainer': 'background analysis without a substantive new development', 'recap': 'old news retold',
-                'opinion': 'commentary/reviews/letters', 'sports': 'fixtures, match results, athletes and competitions',
-                'entertainment': 'celebrity/film features', 'personal_interest': 'minor local cases, lifestyle and travel'},
+                'opinion': 'commentary/reviews/letters', 'profile': 'background without substantive new developments'},
+            'category_definitions': {'politics': 'government, elections and diplomacy', 'economics': 'economic data, markets and trade',
+                'business': 'company earnings, acquisitions and operations', 'technology': 'technology/products/research',
+                'world': 'public health and disasters', 'sports': 'fixtures, athletes, competitions and retirements',
+                'entertainment': 'celebrity and films', 'personal_interest': 'minor local crime, lifestyle and human-interest features'},
+            'importance_definitions': {'major_international': 'major cross-border/world events', 'major_national': 'major national policy or economic developments',
+                'major_sector': 'significant company earnings/transactions, markets, technology or public-health developments',
+                'minor_local': 'minor/local/personal-interest developments without material wider consequences'},
             'events': [dict(event, sources=[{'title': by_id[aid].title, 'publisher': by_id[aid].publisher,
                                            'lead': by_id[aid].evidence[:600]} for aid in event['article_ids']]) for event in events],
             'preferences': config['editorial'], 'response_schema': selection_audit_schema(events)})
@@ -188,13 +197,14 @@ def generate_local(config, articles, date, model, as_of):
                 check = checks[event['event_key']]
                 ids = [alias_by_id[aid] for aid in event['article_ids']]
                 if (check.get('genre') != 'breaking_news' or any(check.get(k) is not True
-                        for k in ('new_development', 'globally_consequential', 'all_sources_cover_this_event'))):
+                        for k in ('new_development', 'all_sources_cover_this_event'))
+                        or check.get('importance_level') not in ('major_international', 'major_national', 'major_sector')):
                     # Omit sources the audit cannot substantiate; never turn a
                     # rejected story into approved copy by changing its label.
                     excluded.update(ids)
                     continue
                 category = check.get('category')
-                if category not in ('politics', 'economics', 'business', 'technology', 'world'): raise
+                if category not in ('politics', 'economics', 'business', 'technology', 'world', 'sports', 'entertainment', 'personal_interest'): raise
                 duplicate = check.get('duplicate_of')
                 if duplicate not in {'none'} | {e['event_key'] for e in events} or duplicate == event['event_key']: raise
                 for aid in ids:

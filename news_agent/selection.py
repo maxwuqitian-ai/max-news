@@ -5,8 +5,9 @@ from math import floor
 from .editorial import EditorialError
 
 LOG = logging.getLogger(__name__)
-CATEGORIES = ['politics', 'economics', 'business', 'technology', 'world']
-GENRES = ['breaking_news', 'explainer', 'recap', 'opinion', 'sports', 'entertainment', 'personal_interest']
+NEWS_CATEGORIES = ['politics', 'economics', 'business', 'technology', 'world']
+CATEGORIES = NEWS_CATEGORIES + ['sports', 'entertainment', 'personal_interest']
+GENRES = ['breaking_news', 'explainer', 'recap', 'opinion', 'profile']
 
 def obj(properties):
     return {'type': 'object', 'properties': properties, 'required': list(properties), 'additionalProperties': False}
@@ -29,7 +30,8 @@ def classify(catalog, model, system, config):
         payload = {
             'task': 'Rate EVERY supplied article separately. Do not select a newsletter yet. '
                     'Return ratings keyed by the exact article IDs, exactly once each. '
-                    'Genre distinguishes substantive new reporting from sports, opinions, explainers and recaps. '
+                    'Category describes the topic; genre describes new reporting versus explanation, commentary or profiles. '
+                    'Sports news belongs to category sports, even when it is breaking_news. Entertainment belongs to entertainment. '
                     'Company acquisitions/earnings/operations are business; government/diplomatic/legal policy actions are politics; '
                     'economic data, financial markets and trade are economics. A cricket fixture is sports, not business. '
                     'Rate consequence and global_relevance 0–5: 0–2 is minor/local/personal-interest; 3–5 is consequential. '
@@ -41,14 +43,15 @@ def classify(catalog, model, system, config):
                 'economics': 'macroeconomic data, financial markets, trade and economy-wide conditions',
                 'business': 'company transactions, acquisitions, earnings, competition and operations',
                 'technology': 'computing, AI, products and significant research breakthroughs',
-                'world': 'major public health, disasters and other globally consequential non-political events'},
+                'world': 'major public health, disasters and other consequential non-political events',
+                'sports': 'fixtures, athletes, competitions and retirements',
+                'entertainment': 'actors, films, celebrity events and entertainment features',
+                'personal_interest': 'minor local cases, human-interest features, lifestyle and travel'},
             'genre_definitions': {'breaking_news': 'FACTUAL REPORT of a substantive NEW development, announcement, decision, transaction, data release or verified change; this is the eligible news genre',
                 'explainer': 'background/how/why analysis without a substantive new development',
                 'recap': 'retelling or rounding up previously reported developments',
                 'opinion': 'commentary, reviews, letters and author opinions',
-                'sports': 'sports fixtures, match results, athletes and competitions; never political protests',
-                'entertainment': 'actors, films, celebrity events and entertainment features',
-                'personal_interest': 'minor local cases, human-interest features, lifestyle and travel'},
+                'profile': 'background about a person, place, lifestyle or ongoing topic without a substantive new development'},
             'impact_scale': {'0': 'irrelevant', '1': 'minor or personal-interest', '2': 'limited/local consequence',
                 '3': 'significant regional or sector consequence', '4': 'major national/international consequence',
                 '5': 'exceptional global consequence'},
@@ -62,6 +65,9 @@ def classify(catalog, model, system, config):
                 if not isinstance(result, dict) or set(result) != ids:
                     raise EditorialError('Rate every supplied source ID exactly once; do not invent or omit IDs')
                 for aid, r in result.items():
+                    if isinstance(r, dict) and r.get('genre') in ('sports', 'entertainment', 'personal_interest'):
+                        # Interpret legacy assessments using orthogonal topic/genre axes.
+                        r['category'], r['genre'] = r['genre'], 'breaking_news'
                     if isinstance(r, dict) and isinstance(r.get('event_key'), str):
                         # An internal grouping label is case/space insensitive;
                         # normalize syntax without changing any source identity.
@@ -83,7 +89,7 @@ def select(catalog, ratings, config, *, excluded=frozenset()):
     groups = {}
     for article in catalog:
         aid = article['id']; r = ratings[aid]
-        if (aid in excluded or r['genre'] != 'breaking_news' or r['consequence'] < policy.get('minimum_consequence', 3)
+        if (aid in excluded or r['category'] not in NEWS_CATEGORIES or r['genre'] != 'breaking_news' or r['consequence'] < policy.get('minimum_consequence', 3)
                 or r['global_relevance'] < policy.get('minimum_global_relevance', 3)):
             continue
         group = groups.setdefault(r['event_key'], [])

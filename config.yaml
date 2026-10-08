@@ -56,7 +56,7 @@ editorial:
   minimum_sections: 3
   politics_world_max_share: 0.4
   conflict_max_share: 0.2
-  technology_max_share: 0.35
+  technology_max_share: 0.25
   style: informative_news_minimal_presentation
   summary_min_characters: 40
   summary_max_characters: 260

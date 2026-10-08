@@ -32,7 +32,7 @@ def test_local_schema_constrains_category_names_without_copying_placeholders(con
     finally: model.close()
     request = json.loads(route.calls[0].request.content)
     assert request['format'] == schema
-    assert request['format']['properties']['ratings']['properties']['a0_title']['properties']['category']['enum'] == ['politics', 'economics', 'business', 'technology', 'world']
+    assert request['format']['properties']['ratings']['properties']['a0_title']['properties']['category']['enum'] == ['politics', 'economics', 'business', 'technology', 'world', 'sports', 'entertainment', 'personal_interest']
     assert 'response_schema' not in request['messages'][1]['content']
 
 
@@ -51,7 +51,7 @@ def test_local_pipeline_reviews_every_story_and_final_edition(config, artifacts)
                     'is_conflict': False, 'consequence': 4, 'global_relevance': 4} for a in payload['articles']}}
             if payload['task'].startswith('Audit the selected'):
                 return {'checks': {e['event_key']: {'genre': 'breaking_news', 'category': e['category'], 'all_sources_cover_this_event': True,
-                    'new_development': True, 'globally_consequential': True, 'duplicate_of': 'none', 'reason': 'Synthetic test assessment'} for e in payload['events']}}
+                    'new_development': True, 'importance_level': 'major_sector', 'duplicate_of': 'none', 'reason': 'Synthetic test assessment'} for e in payload['events']}}
             if not payload['task'].startswith('Write ONE'): return {'approved': True, 'issues': []}
             story = copy.deepcopy(edition['stories'][self.drafts])
             self.drafts += 1
@@ -132,8 +132,8 @@ def test_early_collection_uses_target_time_to_exclude_reports_stale_at_delivery(
 def test_selection_review_cannot_approve_sports_as_company_news(artifacts):
     from news_agent.local_editorial import validate_selection_audit
     event = artifacts[1]['stories'][6]
-    check = {'genre': 'sports', 'category': 'business', 'all_sources_cover_this_event': True, 'new_development': True,
-             'globally_consequential': True, 'duplicate_of': 'none', 'reason': 'This concerns a cricket match'}
+    check = {'genre': 'breaking_news', 'category': 'sports', 'all_sources_cover_this_event': True, 'new_development': True,
+             'importance_level': 'major_sector', 'duplicate_of': 'none', 'reason': 'This concerns a cricket match'}
     with pytest.raises(EditorialError, match='Selection review failed'):
         validate_selection_audit({'checks': {event['event_key']: check}}, [event])
 
