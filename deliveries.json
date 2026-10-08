@@ -16,9 +16,11 @@
     "sent_at": "2026-10-08T13:51:43.494930+00:00"
   },
   "test:automation-repair-2026-10-08:9f8e6d8e5c2447cc": {
-    "status": "pending",
+    "status": "sent",
     "provider": "resend",
     "date": "2026-10-08",
-    "attempted_at": "2026-10-08T23:41:40.649130+00:00"
+    "attempted_at": "2026-10-08T23:41:40.649130+00:00",
+    "message_id": "01a11de4-e3ee-7f0b-a2b5-6849abc7e5f9",
+    "sent_at": "2026-10-08T23:41:42.327125+00:00"
   }
 }
