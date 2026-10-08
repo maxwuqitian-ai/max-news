@@ -9,6 +9,15 @@ NEWS_CATEGORIES = ['politics', 'economics', 'business', 'technology', 'world']
 CATEGORIES = NEWS_CATEGORIES + ['sports', 'entertainment', 'personal_interest']
 GENRES = ['breaking_news', 'explainer', 'recap', 'opinion', 'profile']
 
+def primary_category(title, predicted):
+    """Resolve unambiguous primary events, rather than secondary AI/weather effects."""
+    text = title.casefold()
+    if re.search(r'\b(profits?|earnings|acquisition|buyout|merger)\b', text) and not re.search(r'\b(industrial|economy-wide|sector-wide)\b', text):
+        return 'business'
+    if re.search(r'\b(hurricane|typhoon|earthquake|tsunami)\b', text) and re.search(r'\b(strengthens|forms|hits|strikes|landfall)\b', text):
+        return 'world'
+    return predicted
+
 def obj(properties):
     return {'type': 'object', 'properties': properties, 'required': list(properties), 'additionalProperties': False}
 
@@ -77,6 +86,9 @@ def classify(catalog, model, system, config):
                             or not re.fullmatch(r'[a-z0-9_-]{3,100}', r['event_key'])
                             or any(type(r.get(k)) is not int or not 0 <= r[k] <= 5 for k in ('consequence', 'global_relevance'))):
                         raise EditorialError(f'Invalid source assessment for {aid}')
+                for article in batch:
+                    r = result[article['id']]
+                    r['category'] = primary_category(article['title'], r['category'])
                 ratings.update(result)
                 break
             except EditorialError as exc:
@@ -89,13 +101,15 @@ def select(catalog, ratings, config, *, excluded=frozenset()):
     groups = {}
     for article in catalog:
         aid = article['id']; r = ratings[aid]
-        if (aid in excluded or r['category'] not in NEWS_CATEGORIES or r['genre'] != 'breaking_news' or r['consequence'] < policy.get('minimum_consequence', 3)
-                or r['global_relevance'] < policy.get('minimum_global_relevance', 3)):
+        if aid in excluded or r['category'] not in NEWS_CATEGORIES or r['genre'] != 'breaking_news':
             continue
         group = groups.setdefault(r['event_key'], [])
         group.append((article, r))
     candidates = []
     for key, reports in groups.items():
+        if (max(r['consequence'] for _, r in reports) < policy.get('minimum_consequence', 3)
+                or max(r['global_relevance'] for _, r in reports) < policy.get('minimum_global_relevance', 3)):
+            continue
         reports.sort(key=lambda ar: ar[0]['published_age_hours'])
         primary, rating = reports[0]
         scores = {'consequence': max(r['consequence'] for _, r in reports),

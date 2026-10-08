@@ -55,9 +55,11 @@ def test_local_pipeline_reviews_every_story_and_final_edition(config, artifacts)
             if not payload['task'].startswith('Write ONE'): return {'approved': True, 'issues': []}
             story = copy.deepcopy(edition['stories'][self.drafts])
             self.drafts += 1
-            story['freshness']['article_id'] = 's0'
+            story['freshness'].update(article_id='s0', passage_id='p0')
+            story['freshness'].pop('quote')
             for claim in story['claims']:
-                for ref in claim['evidence']: ref['article_id'] = 's0'
+                for ref in claim['evidence']:
+                    ref.update(article_id='s0', passage_id='p0'); ref.pop('quote')
             return {'story': story}
         def close(self): pass
     model = FakeModel()
@@ -152,3 +154,28 @@ def test_programmatic_selection_groups_duplicates_and_excludes_sports(config):
     assert 'a11' not in {aid for e in events for aid in e['article_ids']}
     company = next(e for e in events if e['event_key'] == 'event_6')
     assert set(company['article_ids']) == {'a6', 'a10'}
+
+
+def test_writer_passage_references_resolve_to_original_quotes(artifacts):
+    from news_agent.local_editorial import evidence_passages, resolve_story
+    articles, edition = artifacts
+    source = articles[0]
+    passages = {'s0': evidence_passages(source.evidence)}
+    story = copy.deepcopy(edition['stories'][0])
+    references = [story['freshness']] + [e for c in story['claims'] for e in c['evidence']]
+    for ref in references:
+        ref.update(article_id='s0', passage_id='p0'); ref.pop('quote')
+    story['cross_check']['status'] = 'independent'
+    resolved = resolve_story(story, edition['stories'][0], {'s0': source.id}, passages)
+    assert resolved['freshness']['quote'] == source.evidence
+    assert resolved['cross_check']['status'] == 'single_source'
+    story['freshness']['passage_id'] = 'invented'
+    with pytest.raises(EditorialError, match='provided passage ID'):
+        resolve_story(story, edition['stories'][0], {'s0': source.id}, passages)
+
+
+def test_company_earnings_and_weather_use_primary_topic():
+    from news_agent.selection import primary_category
+    assert primary_category('AI chip demand pushes company profits to a record', 'technology') == 'business'
+    assert primary_category('Isaias strengthens into the first hurricane', 'economics') == 'world'
+    assert primary_category('Industrial profits rise across China', 'economics') == 'economics'

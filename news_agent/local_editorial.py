@@ -22,12 +22,14 @@ def object_schema(properties):
 
 REVIEW_SCHEMA = object_schema({'approved': {'type': 'boolean'}, 'issues': {'type': 'array', 'items': {'type': 'string'}}})
 
-def story_schema(aliases):
-    ref = object_schema({'article_id': {'type': 'string', 'enum': list(aliases)}, 'quote': {'type': 'string'}})
+def story_schema(aliases, passages):
+    ref = {'anyOf': [object_schema({'article_id': {'type': 'string', 'enum': [aid]},
+            'passage_id': {'type': 'string', 'enum': list(passages[aid])}}) for aid in aliases]}
     claim = object_schema({'kind': {'type': 'string', 'enum': ['fact', 'context']}, 'text': {'type': 'string'},
                           'evidence': {'type': 'array', 'items': ref, 'minItems': 1}})
     return object_schema({'story': object_schema({'headline': {'type': 'string'}, 'is_conflict': {'type': 'boolean'},
-        'freshness': object_schema(dict(ref['properties'], development={'type': 'string'})),
+        'freshness': {'anyOf': [object_schema({'article_id': {'type': 'string', 'enum': [aid]},
+                'passage_id': {'type': 'string', 'enum': list(passages[aid])}, 'development': {'type': 'string'}}) for aid in aliases]},
         'claims': {'type': 'array', 'items': claim, 'minItems': 2, 'maxItems': 3},
         'cross_check': object_schema({'status': {'type': 'string', 'enum': ['independent', 'single_source', 'not_independent']},
                                       'note': {'type': 'string'}})})})
@@ -59,12 +61,12 @@ def validate_selection_audit(audit, events):
 STORY_SCHEMA = {
     'headline': '中立的简体中文标题',
     'is_conflict': 'JSON boolean; true for armed-conflict reporting',
-    'freshness': {'development': '具体的新进展，非旧事重述', 'article_id': 'fresh report ID',
-                  'quote': 'exact passage documenting the new development'},
+    'freshness': {'development': '具体的新进展，非旧事重述', 'article_id': 'provided source ID',
+                  'passage_id': 'provided passage ID documenting the new development'},
     'claims': [{'kind': 'fact', 'text': '说明主要事实、关键数字和必要归属，约70至130个汉字',
-                'evidence': [{'article_id': 'exact provided ID', 'quote': 'exact unmodified supporting passage >=15 characters'}]},
+                'evidence': [{'article_id': 'exact provided ID', 'passage_id': 'provided supporting passage ID'}]},
                {'kind': 'context', 'text': '补充相关背景、各方回应或下一步安排，约50至90个汉字',
-                'evidence': [{'article_id': 'exact provided ID', 'quote': 'exact supporting passage'}]}],
+                'evidence': [{'article_id': 'exact provided ID', 'passage_id': 'provided supporting passage ID'}]}],
     'cross_check': {'status': 'independent or single_source or not_independent',
                     'note': '中文简短说明核实情况'}}
 
@@ -106,7 +108,23 @@ def decode_selection(events, aliases, config):
     return decoded
 
 
-def resolve_story(candidate, event, aliases):
+def evidence_passages(text):
+    # References point into immutable retrieved text. The model selects IDs;
+    # Python supplies the verbatim quote, preventing altered/annotated quotes.
+    sentences = re.split(r'(?<=[.!?。！？])\s+', text)
+    chunks = []
+    for sentence in sentences:
+        sentence = sentence.strip()
+        while len(sentence) > 700:
+            cut = sentence.rfind(' ', 0, 700)
+            if cut < 200: cut = 700
+            chunks.append(sentence[:cut].strip())
+            sentence = sentence[cut:].lstrip()
+        if len(sentence) >= 15: chunks.append(sentence)
+    if not chunks and len(text.strip()) >= 15: chunks = [text.strip()]
+    return {f'p{i}': chunk for i, chunk in enumerate(chunks)}
+
+def resolve_story(candidate, event, aliases, passages=None):
     # Ranking metadata is owned by Python. The writer supplies prose and
     # evidence references, using short per-story source IDs to avoid copy errors.
     if not isinstance(candidate, dict):
@@ -128,7 +146,14 @@ def resolve_story(candidate, event, aliases):
         aid = reference.get('article_id')
         if aid not in aliases:
             raise EditorialError('Evidence must cite one of the provided short source IDs')
+        if passages is not None:
+            pid = reference.pop('passage_id', None)
+            if pid not in passages.get(aid, {}):
+                raise EditorialError('Evidence must cite a provided passage ID from the same source')
+            reference['quote'] = passages[aid][pid]
         reference['article_id'] = aliases[aid]
+    if len(aliases) == 1:
+        candidate['cross_check'] = {'status': 'single_source', 'note': '本条仅使用一项报道，未完成独立交叉核实。'}
     return candidate
 
 
@@ -215,14 +240,19 @@ def generate_local(config, articles, date, model, as_of):
         LOG.info('Local editorial story=%d/%d event=%s', index, len(events), event.get('event_key'))
         evidence = [by_id[aid].to_dict() for aid in event['article_ids']]
         source_aliases = {f's{i}': aid for i, aid in enumerate(event['article_ids'])}
-        writing_evidence = [dict(by_id[aid].to_dict(), id=alias) for alias, aid in source_aliases.items()]
+        passages = {alias: evidence_passages(by_id[aid].evidence) for alias, aid in source_aliases.items()}
+        if any(not p for p in passages.values()): raise EditorialError('Insufficient source passages')
+        writing_evidence = [dict({k: v for k, v in by_id[aid].to_dict().items() if k != 'evidence'},
+                                 id=alias, passages=passages[alias]) for alias, aid in source_aliases.items()]
         payload = {'task': 'Write ONE concise Chinese story with 2–3 grounded paragraphs. '
                            'Use approximately 120–220 Chinese characters total, with substantive details and essential context. Omit filler and process commentary. Do not invent background. '
-                           'Use only the supplied short source IDs in all citations. Set is_conflict true for armed conflict. '
-                           'Quotes must be copied exactly from evidence, not translated. Return {"story": {...}}.',
+                           'Use only supplied source IDs and passage IDs in citations; cite all passages needed for EVERY assertion. '
+                           'Do not copy quotes or append annotations. Use established Chinese place names; retain original names if unsure. '
+                           'Set is_conflict true for armed conflict. A single provided report is single_source, never independently cross-checked. '
+                           'Return {"story": {...}}.',
                    'event': {'event_key': event['event_key'], 'category': event['category']},
                    'articles': writing_evidence, 'schema': {'story': STORY_SCHEMA},
-                   'response_schema': story_schema(source_aliases)}
+                   'response_schema': story_schema(source_aliases, passages)}
         story = None
         single = copy.deepcopy(config)
         single['newsletter'].update(min_stories=1, max_stories=1)
@@ -230,7 +260,7 @@ def generate_local(config, articles, date, model, as_of):
         for attempt in range(2):
             raw_candidate = model.ask(SYSTEM, payload).get('story', {})
             try:
-                candidate = resolve_story(raw_candidate, event, source_aliases)
+                candidate = resolve_story(raw_candidate, event, source_aliases, passages)
                 validate({'date': date, 'as_of': as_of.isoformat(), 'stories': [candidate]}, articles, single, date, enforce_balance=False)
                 story = candidate
                 break
