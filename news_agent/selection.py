@@ -62,6 +62,10 @@ def classify(catalog, model, system, config):
                 if not isinstance(result, dict) or set(result) != ids:
                     raise EditorialError('Rate every supplied source ID exactly once; do not invent or omit IDs')
                 for aid, r in result.items():
+                    if isinstance(r, dict) and isinstance(r.get('event_key'), str):
+                        # An internal grouping label is case/space insensitive;
+                        # normalize syntax without changing any source identity.
+                        r['event_key'] = re.sub(r'[^a-z0-9_-]+', '_', r['event_key'].casefold()).strip('_')
                     if (not isinstance(r, dict) or r.get('category') not in CATEGORIES or r.get('genre') not in GENRES
                             or type(r.get('is_conflict')) is not bool or not isinstance(r.get('event_key'), str)
                             or not re.fullmatch(r'[a-z0-9_-]{3,100}', r['event_key'])
