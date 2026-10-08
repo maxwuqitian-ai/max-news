@@ -313,7 +313,15 @@ def generate_local(config, articles, date, model, as_of):
             LOG.warning('Omitting unapproved event=%s reason=%s', event['event_key'], str(exc))
     edition['stories'] = balance_verified_stories(edition['stories'], config)
     validate(edition, articles, config, date)
-    review = model.ask(EDITION_AUDIT_SYSTEM if excerpt_mode else SYSTEM, {
+    # The no-thinking model misreads explicit Chinese reported-speech attribution.
+    # Spend reasoning tokens on the final audit only; ranking stays inexpensive.
+    from .editorial import Model
+    reviewer = model
+    if excerpt_mode and isinstance(model, Model) and config['model'].get('provider') == 'ollama':
+        reviewer = Model(dict(config['model'],
+            thinking=config['model'].get('final_review_thinking', True),
+            max_output_tokens=config['model'].get('final_review_max_output_tokens', 6000)), client=model.client)
+    review = reviewer.ask(EDITION_AUDIT_SYSTEM if excerpt_mode else SYSTEM, {
         'task': 'Final edition audit: are all events distinct and globally consequential? '
                 'Check that multiple descriptions of one event were merged, politics/economics/acquisitions '
                 'and technology/business all receive substantive coverage; war/politics does not dominate, '
