@@ -21,7 +21,9 @@ jobs:
           root=Path('source-check');root.mkdir(exist_ok=True)
           urls=['https://feeds.bbci.co.uk/zhongwen/simp/rss.xml', 'https://www.ftchinese.com/rss/news',
                 'https://cn.nytimes.com/rss/', 'https://rss.dw.com/rdf/rss-chi-all',
-                'https://www.rfi.fr/cn/rss', 'https://www.zaobao.com.sg/realtime/world/rss.xml']
+                'https://www.rfi.fr/cn/rss', 'https://www.zaobao.com.sg/realtime/world/rss.xml',
+                'https://www.cna.com.tw/rss/afe.xml', 'https://www.cna.com.tw/rss/aopl.xml',
+                'https://technews.tw/feed/']
           def check(url):
               try:
                   response=httpx.get(url,follow_redirects=True,timeout=30)
