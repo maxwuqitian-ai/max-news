@@ -26,11 +26,22 @@ jobs:
           from urllib.error import HTTPError
           message_id = str(uuid.UUID(os.environ['EMAIL_ID']))
           request = Request('https://api.resend.com/emails/' + message_id,
-              headers={'Authorization': 'Bearer ' + os.environ['RESEND_API_KEY']})
+              headers={'Authorization': 'Bearer ' + os.environ['RESEND_API_KEY'],
+                       'User-Agent': 'max-news/1.0'})
           try:
               with urlopen(request, timeout=20) as response:
                   body = json.load(response)
           except HTTPError as exc:
+              try:
+                  error = json.load(exc)
+              except (ValueError, TypeError):
+                  error = {}
+              if error.get('name') == 'restricted_api_key':
+                  print('Current key permits sending but not reading delivery status')
+              elif error:
+                  print('Provider returned a JSON API error; response omitted')
+              else:
+                  print('Provider returned a non-JSON rejection; response omitted')
               raise SystemExit('Provider status read unavailable: HTTP ' + str(exc.code))
           target = parseaddr(os.environ['NEWS_RECIPIENT'])[1].casefold()
           recipients = [parseaddr(value)[1].casefold() for value in body.get('to', [])]
