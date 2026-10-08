@@ -43,7 +43,7 @@ Open the HTML file locally and review accuracy, Chinese phrasing, balance, dupli
 
 ## Configure delivery
 
-For the requested recipient, set `NEWS_RECIPIENT` to `qitian.wu.th@dartmouth.edu` in GitHub Secrets and your local/cloud runtime. Also set:
+Set `NEWS_RECIPIENT` to your recipient address in GitHub Secrets and your local/cloud runtime. Keep the address out of source configuration. Also set:
 
 | Secret | Purpose |
 | --- | --- |
@@ -105,7 +105,7 @@ The edition has no fixed category or country quotas. Section sizes vary by daily
 
 ## Editorial and evidence limits
 
-The pipeline normalizes tracking URLs, filters stale/future RSS timestamps, makes preliminary lexical event groups, then uses the model to merge events across languages and select/rank them. Ranking weights are consequence 40%, timeliness 20%, credibility 20%, global relevance 20%. Every fact/context paragraph must cite an exact retrieved passage; a second model pass checks entailment, translations, Chinese quality, headline wording, independence and event duplication.
+The pipeline normalizes tracking URLs and filters stale/future publication timestamps. The local model assesses every source in small batches and assigns reusable event keys across languages. Python groups those keys, ranks distinct events and applies proportional topic limits; a separate per-event audit checks genres, categories, duplicate events and actual new developments. The optional hosted pipeline also provides conservative preliminary lexical groups to its editor. Ranking weights are consequence 40%, timeliness 20%, credibility 20%, global relevance 20%. Every fact/context paragraph must cite an exact retrieved passage; a second model pass checks entailment, translations, Chinese quality, headline wording, independence and event duplication.
 
 GDELT is a multilingual **discovery** service. Its `seendate` is stored as discovery time. A GDELT article is eligible only when the publisher supplies a timezone-aware publication timestamp through article metadata/JSON-LD and that timestamp is within the window; unknown or stale publication dates are excluded. RSS entries without a publication timestamp are also excluded. A discovery time or updated timestamp alone never qualifies a story as fresh. Publisher family labels alone do not establish independent reporting: a syndicated copy is one reporting origin. Independent corroboration is required when available and disclosed per story; single-source reporting is labeled. These checks reduce errors but are not a guarantee of truth. Human review of the initial sample remains required.
 
