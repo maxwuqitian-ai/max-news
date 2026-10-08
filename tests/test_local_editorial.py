@@ -236,3 +236,21 @@ def test_model_checkpoints_require_exact_inputs_and_have_an_expiry(config):
         model.ask('Review', {'task': 'test', 'source': 'Original publisher evidence'})
         assert route.call_count == 4
     finally: model.close()
+
+
+def test_passage_splitting_preserves_abbreviated_subjects():
+    from news_agent.local_editorial import evidence_passages
+    text = 'Officials made an announcement. U.S. authorities want him kept in Beirut. Additional reporting follows.'
+    passages = list(evidence_passages(text).values())
+    assert 'U.S. authorities want him kept in Beirut.' in passages
+    assert all(p in text for p in passages)
+
+
+def test_omitting_a_rejected_story_does_not_waive_topic_limits(config):
+    from news_agent.local_editorial import balance_verified_stories
+    stories = [{'event_key':f'event-{i}', 'category': 'politics' if i < 6 else 'business',
+                'is_conflict': False, 'rank_score': 100-i} for i in range(14)]
+    balanced = balance_verified_stories(stories, config)
+    assert len(balanced) == 13
+    assert sum(s['category']=='politics' for s in balanced) <= len(balanced)*.4
+    assert 'event-5' not in {s['event_key'] for s in balanced}
