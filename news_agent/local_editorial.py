@@ -6,6 +6,30 @@ from .freshness import timestamp
 
 LOG = logging.getLogger(__name__)
 
+def object_schema(properties):
+    return {'type': 'object', 'properties': properties, 'required': list(properties), 'additionalProperties': False}
+
+REVIEW_SCHEMA = object_schema({'approved': {'type': 'boolean'}, 'issues': {'type': 'array', 'items': {'type': 'string'}}})
+
+def selection_schema(aliases, minimum, maximum):
+    scores = object_schema({name: {'type': 'integer', 'minimum': 0, 'maximum': 5}
+                            for name in ('consequence', 'timeliness', 'credibility', 'global_relevance')})
+    event = object_schema({'event_key': {'type': 'string'},
+        'category': {'type': 'string', 'enum': ['politics', 'economics', 'business', 'technology', 'world']},
+        'article_ids': {'type': 'array', 'items': {'type': 'string', 'enum': list(aliases)}, 'minItems': 1, 'maxItems': 3},
+        'scores': scores})
+    return object_schema({'events': {'type': 'array', 'items': event, 'minItems': minimum, 'maxItems': maximum}})
+
+def story_schema(aliases):
+    ref = object_schema({'article_id': {'type': 'string', 'enum': list(aliases)}, 'quote': {'type': 'string'}})
+    claim = object_schema({'kind': {'type': 'string', 'enum': ['fact', 'context']}, 'text': {'type': 'string'},
+                          'evidence': {'type': 'array', 'items': ref, 'minItems': 1}})
+    return object_schema({'story': object_schema({'headline': {'type': 'string'}, 'is_conflict': {'type': 'boolean'},
+        'freshness': object_schema(dict(ref['properties'], development={'type': 'string'})),
+        'claims': {'type': 'array', 'items': claim, 'minItems': 2, 'maxItems': 3},
+        'cross_check': object_schema({'status': {'type': 'string', 'enum': ['independent', 'single_source', 'not_independent']},
+                                      'note': {'type': 'string'}})})})
+
 STORY_SCHEMA = {
     'headline': '中立的简体中文标题',
     'is_conflict': 'JSON boolean; true for armed-conflict reporting',
@@ -101,7 +125,9 @@ def generate_local(config, articles, date, model, as_of):
                 'Business means company transactions, earnings and operations; economics means macroeconomics, markets and trade. '
                 'Do not label public health or human-interest features as business. Choose up to 3 useful original reports/event.',
         'preferences': config['editorial'], 'date': date, 'as_of': as_of.isoformat(), 'articles': catalog,
-        'schema': {'events': [{'event_key': 'short unique event key', 'category': 'politics/economics/business/technology/world',
+        'response_schema': selection_schema(aliases, n['min_stories'], n['max_stories']),
+        'valid_categories': ['politics', 'economics', 'business', 'technology', 'world'],
+        'schema': {'events': [{'event_key': 'short unique event key', 'category': 'politics',
                               'article_ids': ['existing short IDs'],
                               'scores': {'consequence': 5, 'timeliness': 5, 'credibility': 5, 'global_relevance': 5}}]}}
     for attempt in range(2):
@@ -115,11 +141,12 @@ def generate_local(config, articles, date, model, as_of):
                         'Require substantive new developments and global importance. Return {"approved": true/false, "issues": [...]}.',
                 'events': [dict(event, sources=[{'title': by_id[aid].title, 'publisher': by_id[aid].publisher,
                                                 'lead': by_id[aid].evidence[:600]} for aid in event['article_ids']]) for event in events],
-                'preferences': config['editorial']})
+                'preferences': config['editorial'], 'response_schema': REVIEW_SCHEMA})
             if audit.get('approved') is not True or audit.get('issues') != []:
                 raise EditorialError('Selection review failed: ' + str(audit.get('issues', [])))
             break
         except EditorialError as exc:
+            LOG.warning('Selection rejected attempt=%d reason=%s', attempt + 1, str(exc))
             if attempt == 1: raise
             ranking_payload['validation_error'] = str(exc)
             ranking_payload['previous_selection'] = ranked
@@ -134,7 +161,8 @@ def generate_local(config, articles, date, model, as_of):
                            'Use only the supplied short source IDs in all citations. Set is_conflict true for armed conflict. '
                            'Quotes must be copied exactly from evidence, not translated. Return {"story": {...}}.',
                    'event': {'event_key': event['event_key'], 'category': event['category']},
-                   'articles': writing_evidence, 'schema': {'story': STORY_SCHEMA}}
+                   'articles': writing_evidence, 'schema': {'story': STORY_SCHEMA},
+                   'response_schema': story_schema(source_aliases)}
         story = None
         single = copy.deepcopy(config)
         single['newsletter'].update(min_stories=1, max_stories=1)
@@ -157,7 +185,7 @@ def generate_local(config, articles, date, model, as_of):
                     'Verify the category, armed-conflict flag, and that all sources cover the same event. '
                     'No claim may rest on navigation or unrelated recommended links. '
                     'Return {"approved": true/false, "issues": [specific problems]}. Fail closed.',
-            'story': story, 'articles': evidence})
+            'story': story, 'articles': evidence, 'response_schema': REVIEW_SCHEMA})
         if review.get('approved') is not True or review.get('issues') != []:
             raise EditorialError(f"Local editorial verification failed for {event.get('event_key')}: {review.get('issues', [])}")
         edition['stories'].append(story)
@@ -168,6 +196,7 @@ def generate_local(config, articles, date, model, as_of):
                 'and technology/business all receive substantive coverage; war/politics does not dominate, '
                 'and Chinese reads naturally. Return {"approved": true/false, "issues": [...]}.',
         'preferences': config['editorial'],
+        'response_schema': REVIEW_SCHEMA,
         'stories': [{'event_key': s['event_key'], 'headline': s['headline'], 'category': s['category'],
                      'paragraphs': [c['text'] for c in s['claims']]} for s in edition['stories']]})
     if review.get('approved') is not True or review.get('issues') != []:

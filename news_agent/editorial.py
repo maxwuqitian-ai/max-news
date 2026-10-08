@@ -43,12 +43,13 @@ class Model:
         if self.owns: self.client.close()
     def ask(self, system, payload):
         if self.config.get('provider') == 'ollama':
+            prompt = {k: v for k, v in payload.items() if k != 'response_schema'}
             response = self.client.post(self.config['base_url'].rstrip('/') + '/api/chat', json={
-                'model': self.config['name'], 'format': 'json', 'stream': False, 'keep_alive': '30m',
+                'model': self.config['name'], 'format': payload.get('response_schema', 'json'), 'stream': False, 'keep_alive': '30m',
                 'options': {'temperature': 0, 'num_ctx': self.config.get('context_size', 32768),
                             'num_predict': self.config.get('max_output_tokens', 6000), 'num_thread': 4},
                 'messages': [{'role': 'system', 'content': system},
-                             {'role': 'user', 'content': json.dumps(payload, ensure_ascii=False, separators=(',', ':'))}]})
+                             {'role': 'user', 'content': json.dumps(prompt, ensure_ascii=False, separators=(',', ':'))}]})
             response.raise_for_status()
             try: return json.loads(response.json()['message']['content'])
             except (ValueError, KeyError, TypeError) as exc: raise EditorialError('Invalid local model JSON') from exc

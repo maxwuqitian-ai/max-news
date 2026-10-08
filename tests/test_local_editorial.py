@@ -19,6 +19,23 @@ def test_local_model_needs_no_api_key_and_returns_chinese_json(config, monkeypat
     assert 'authorization' not in route.calls[0].request.headers
 
 
+@respx.mock
+def test_local_schema_constrains_category_names_without_copying_placeholders(config):
+    import json
+    from news_agent.local_editorial import selection_schema
+    config['model'].update(provider='ollama', api_key_env=None, base_url='http://127.0.0.1:11434')
+    schema = selection_schema({'a0': 'original-id'}, 10, 15)
+    route = respx.post('http://127.0.0.1:11434/api/chat').mock(return_value=httpx.Response(200,
+        json={'message': {'content': '{"events":[]}'}}))
+    model = Model(config['model'])
+    try: model.ask('test', {'task': 'Select events', 'response_schema': schema})
+    finally: model.close()
+    request = json.loads(route.calls[0].request.content)
+    assert request['format'] == schema
+    assert request['format']['properties']['events']['items']['properties']['category']['enum'] == ['politics', 'economics', 'business', 'technology', 'world']
+    assert 'response_schema' not in request['messages'][1]['content']
+
+
 def test_local_pipeline_reviews_every_story_and_final_edition(config, artifacts):
     articles, edition = artifacts
     config['model']['provider'] = 'ollama'
