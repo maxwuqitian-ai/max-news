@@ -2,6 +2,7 @@
 import copy
 import logging
 from .editorial import EditorialError, SYSTEM, validate
+from .freshness import timestamp
 
 LOG = logging.getLogger(__name__)
 
@@ -22,9 +23,16 @@ STORY_SCHEMA = {
 def generate_local(config, articles, date, model, as_of):
     n = config['newsletter']
     by_id = {a.id: a for a in articles}
-    catalog = [{'id': a.id, 'title': a.title, 'publisher': a.publisher, 'family': a.family,
-                'published': a.published, 'discovered': a.discovered,
-                'excerpt': a.evidence[:config['model'].get('ranking_excerpt_characters', 400)]} for a in articles]
+    catalog = []
+    for article in articles:
+        # Ranking needs the lead and relative age; writing/review retain full
+        # publication metadata and evidence. Avoid repeating every RSS headline.
+        lead = article.evidence
+        if lead.startswith(article.title):
+            lead = lead[len(article.title):].lstrip('. ')
+        catalog.append({'id': article.id, 'title': article.title, 'publisher': article.publisher,
+                        'published_age_hours': round((as_of - timestamp(article.published)).total_seconds() / 3600, 2),
+                        'excerpt': lead[:config['model'].get('ranking_excerpt_characters', 180)]})
     ranked = model.ask(SYSTEM, {
         'task': 'Group reporting of the same event across languages and select 10–15 highest-impact distinct events. '
                 'Do not write summaries yet. Vary category counts with important developments each day, without fixed category quotas; economics and companies must get substantive coverage. '

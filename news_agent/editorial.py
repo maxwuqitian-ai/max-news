@@ -48,7 +48,7 @@ class Model:
                 'options': {'temperature': 0, 'num_ctx': self.config.get('context_size', 32768),
                             'num_predict': self.config.get('max_output_tokens', 6000), 'num_thread': 4},
                 'messages': [{'role': 'system', 'content': system},
-                             {'role': 'user', 'content': json.dumps(payload, ensure_ascii=False)}]})
+                             {'role': 'user', 'content': json.dumps(payload, ensure_ascii=False, separators=(',', ':'))}]})
             response.raise_for_status()
             try: return json.loads(response.json()['message']['content'])
             except (ValueError, KeyError, TypeError) as exc: raise EditorialError('Invalid local model JSON') from exc
