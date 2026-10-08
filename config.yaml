@@ -1,7 +1,7 @@
 newsletter:
   timezone: America/New_York
   target_time: '08:00'
-  preparation_minutes: 75
+  preparation_minutes: 120
   min_stories: 10
   max_stories: 15
   lookback_hours: 24
@@ -18,7 +18,7 @@ model:
   base_url: http://127.0.0.1:11434
   name: qwen2.5:7b
   api_key_env: null # local inference requires no API key
-  timeout_seconds: 900
+  timeout_seconds: 1800
   context_size: 32768
   max_output_tokens: 6000
   ranking_excerpt_characters: 180

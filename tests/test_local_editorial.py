@@ -61,9 +61,9 @@ def test_local_pipeline_reviews_every_story_and_final_edition(config, artifacts)
 
 def test_preparation_starts_early_but_send_gate_remains_0800(config):
     config['newsletter']['delivery_enabled'] = True
-    now = datetime.fromisoformat('2026-07-15T10:45:00+00:00')
+    now = datetime.fromisoformat('2026-07-15T10:00:00+00:00')
     assert preparation_due(config, now) and not schedule_due(config, now)
-    assert not preparation_due(config, datetime.fromisoformat('2026-07-15T10:44:00+00:00'))
+    assert not preparation_due(config, datetime.fromisoformat('2026-07-15T09:59:00+00:00'))
 
 
 def test_static_real_sample_has_matching_citations_and_original_urls(config):
@@ -104,3 +104,17 @@ def test_local_rejects_invented_evidence_reference(artifacts):
     story['freshness']['article_id'] = 'invented'
     with pytest.raises(EditorialError, match='provided short source IDs'):
         resolve_story(story, story, {'s0': 'article-0'})
+
+
+def test_early_collection_uses_target_time_to_exclude_reports_stale_at_delivery(config, artifacts):
+    from dataclasses import replace
+    from news_agent.cli import expected_send_time
+    from news_agent.freshness import is_fresh
+    now = datetime.fromisoformat('2026-01-15T11:00:00+00:00')  # 06:00 New York
+    target = expected_send_time(config, now)
+    assert target == datetime.fromisoformat('2026-01-15T13:00:00+00:00')
+    article = replace(artifacts[0][0], published='2026-01-14T12:00:00+00:00')
+    assert is_fresh(article, now, 24)
+    assert not is_fresh(article, target, 24)
+    late = datetime.fromisoformat('2026-01-15T14:00:00+00:00')
+    assert expected_send_time(config, late) == late

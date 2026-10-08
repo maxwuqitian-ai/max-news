@@ -11,10 +11,16 @@ from .collect import Article, collect
 from .delivery import atomic_json, deliver, already_attempted, DeliveryError
 from .editorial import EditorialError, generate, validate
 from .render import write
-from .freshness import verify_send_freshness
+from .freshness import verify_send_freshness, is_fresh
 from .weather import forecast
 
 LOG = logging.getLogger(__name__)
+
+def expected_send_time(config, now):
+    local = now.astimezone(ZoneInfo(config['newsletter']['timezone']))
+    hour, minute = map(int, config['newsletter']['target_time'].split(':'))
+    target = local.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    return max(now, target.astimezone(timezone.utc))
 
 
 def schedule_due(config, now=None):
@@ -81,6 +87,11 @@ def main(argv=None):
             edition = read_artifacts(root, config, edition_date)
         else:
             articles, failures = collect(config, now)
+            if args.command == 'run':
+                # Preparing early must not admit reports that will be stale at
+                # the intended delivery time. Sending still checks actual time.
+                cutoff = expected_send_time(config, now)
+                articles = [a for a in articles if is_fresh(a, cutoff, config['newsletter']['lookback_hours'])]
             atomic_json(root / 'articles.json', [a.to_dict() for a in articles])
             atomic_json(root / 'collection-report.json', {'retrieved_at': now.isoformat(), 'count': len(articles), 'failures': failures})
             LOG.info('Collection completed articles=%d unavailable_sources=%d', len(articles), len(failures))
