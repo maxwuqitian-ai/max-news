@@ -9,7 +9,7 @@ from datetime import datetime
 
 @respx.mock
 def test_local_model_needs_no_api_key_and_returns_chinese_json(config, monkeypatch):
-    config['model'].update(provider='ollama', api_key_env=None, base_url='http://127.0.0.1:11434')
+    config['model'].update(provider='ollama', api_key_env=None, base_url='http://127.0.0.1:11434', thinking=False)
     monkeypatch.delenv('NEWS_LLM_API_KEY', raising=False)
     route = respx.post('http://127.0.0.1:11434/api/chat').mock(return_value=httpx.Response(200,
         json={'message': {'content': '{"headline":"本地模型中文测试"}'}}))
@@ -17,6 +17,8 @@ def test_local_model_needs_no_api_key_and_returns_chinese_json(config, monkeypat
     try: assert model.ask('test', {'task': 'test'})['headline'] == '本地模型中文测试'
     finally: model.close()
     assert 'authorization' not in route.calls[0].request.headers
+    import json
+    assert json.loads(route.calls[0].request.content)['think'] is False
 
 
 @respx.mock
@@ -52,6 +54,18 @@ def test_local_pipeline_reviews_every_story_and_final_edition(config, artifacts)
             if payload['task'].startswith('Audit the selected'):
                 return {'checks': {e['event_key']: {'genre': 'breaking_news', 'category': e['category'], 'all_sources_cover_this_event': True,
                     'new_development': True, 'importance_level': 'major_sector', 'duplicate_of': 'none', 'reason': 'Synthetic test assessment'} for e in payload['events']}}
+            if payload['task'].startswith('Verify this single story'):
+                assert 'story' not in payload
+                assert all('evidence' not in a for a in payload['articles'])
+                assert payload['published_story']['paragraphs']
+                sources = {p['id']: p for p in payload['source_passages']}
+                for paragraph in payload['published_story']['paragraphs']:
+                    assert 'quote' not in paragraph
+                    assert paragraph['citations']
+                    for reference in paragraph['citations']:
+                        assert sources[reference]['quote']
+                        assert sources[reference]['source_id'] == 's0'
+                return {'approved': True, 'issues': []}
             if not payload['task'].startswith('Write ONE'): return {'approved': True, 'issues': []}
             story = copy.deepcopy(edition['stories'][self.drafts])
             self.drafts += 1
@@ -254,3 +268,21 @@ def test_omitting_a_rejected_story_does_not_waive_topic_limits(config):
     assert len(balanced) == 13
     assert sum(s['category']=='politics' for s in balanced) <= len(balanced)*.4
     assert 'event-5' not in {s['event_key'] for s in balanced}
+
+
+def test_writer_requires_main_claim_support_from_each_provided_report(artifacts):
+    from news_agent.local_editorial import evidence_passages, resolve_story, story_schema
+    articles, edition = artifacts
+    aliases = {'s0':articles[0].id, 's1':articles[1].id}
+    passages = {key:evidence_passages(articles[i].evidence) for i,key in enumerate(aliases)}
+    event = dict(edition['stories'][0], article_ids=list(aliases.values()))
+    story = {'headline':event['headline'], 'freshness': {'article_id':'s0','passage_id':'p0','development':'虚构测试进展'},
+             'claims': {kind:{'text':event['claims'][i]['text'],'evidence':{'s0':['p0'],'s1':['p0']}}
+                        for i,kind in enumerate(('fact','context'))},
+             'cross_check':{'status':'not_independent','note':'仅为合成测试素材。'}}
+    result = resolve_story(story,event,aliases,passages)
+    assert {r['article_id'] for r in result['claims'][0]['evidence']} == set(aliases.values())
+    assert story_schema(aliases,passages)['properties']['story']['properties']['claims']['properties']['fact']['properties']['evidence']['properties']['s1']['minItems'] == 1
+    story['claims']['fact']['evidence']['s1'] = []
+    with pytest.raises(EditorialError,match='every provided source'):
+        resolve_story(story,event,aliases,passages)

@@ -51,7 +51,7 @@ class Model:
         directory = self.config.get('cache_dir') if self.config.get('provider') == 'ollama' else None
         if not directory: return self._ask(system, payload)
         fingerprint = json.dumps({'version': 1, 'system': system, 'payload': payload,
-            'settings': {k: self.config.get(k) for k in ('provider', 'base_url', 'name', 'context_size', 'max_output_tokens')}},
+            'settings': {k: self.config.get(k) for k in ('provider', 'base_url', 'name', 'context_size', 'max_output_tokens', 'thinking')}},
             ensure_ascii=False, sort_keys=True, separators=(',', ':'))
         path = Path(directory) / (sha256(fingerprint.encode()).hexdigest() + '.json')
         try:
@@ -68,12 +68,14 @@ class Model:
     def _ask(self, system, payload):
         if self.config.get('provider') == 'ollama':
             prompt = {k: v for k, v in payload.items() if k != 'response_schema'}
-            response = self.client.post(self.config['base_url'].rstrip('/') + '/api/chat', json={
+            request = {
                 'model': self.config['name'], 'format': payload.get('response_schema', 'json'), 'stream': False, 'keep_alive': '30m',
                 'options': {'temperature': 0, 'num_ctx': self.config.get('context_size', 32768),
                             'num_predict': self.config.get('max_output_tokens', 6000), 'num_thread': 4},
                 'messages': [{'role': 'system', 'content': system},
-                             {'role': 'user', 'content': json.dumps(prompt, ensure_ascii=False, separators=(',', ':'))}]})
+                             {'role': 'user', 'content': json.dumps(prompt, ensure_ascii=False, separators=(',', ':'))}]}
+            if 'thinking' in self.config: request['think'] = self.config['thinking']
+            response = self.client.post(self.config['base_url'].rstrip('/') + '/api/chat', json=request)
             response.raise_for_status()
             try: return json.loads(response.json()['message']['content'])
             except (ValueError, KeyError, TypeError) as exc: raise EditorialError('Invalid local model JSON') from exc

@@ -81,7 +81,6 @@ jobs:
             .tools/ollama
             .models
           key: ollama-linux-amd64-0.40.1-${{ hashFiles('config.yaml', 'scripts/install_ollama.sh') }}
-          restore-keys: ollama-linux-amd64-0.40.1-
       - name: Check email credentials before generation
         if: steps.gate.outputs.enabled == 'true' && steps.gate.outputs.mode != 'preview'
         run: |

@@ -32,17 +32,20 @@ Only approve when all assertions and their citations meet these requirements. Re
 def object_schema(properties):
     return {'type': 'object', 'properties': properties, 'required': list(properties), 'additionalProperties': False}
 
-REVIEW_SCHEMA = object_schema({'approved': {'type': 'boolean'}, 'issues': {'type': 'array', 'items': {'type': 'string'}}})
+REVIEW_SCHEMA = object_schema({'approved': {'type': 'boolean'}, 'issues': {'type': 'array', 'maxItems': 5,
+                              'items': {'type': 'string', 'maxLength': 500}}})
 
 def story_schema(aliases, passages):
-    ref = {'anyOf': [object_schema({'article_id': {'type': 'string', 'enum': [aid]},
-            'passage_id': {'type': 'string', 'enum': list(passages[aid])}}) for aid in aliases]}
-    claim = object_schema({'kind': {'type': 'string', 'enum': ['fact', 'context']}, 'text': {'type': 'string'},
-                          'evidence': {'type': 'array', 'items': ref, 'minItems': 1}})
+    def citations(required):
+        return object_schema({aid: {'type': 'array', 'items': {'type': 'string', 'enum': list(passages[aid])},
+                                   'minItems': 1 if aid in required else 0, 'maxItems': 5} for aid in aliases})
+    main = object_schema({'text': {'type': 'string'}, 'evidence': citations(set(aliases))})
+    context = object_schema({'text': {'type': 'string'},
+                            'evidence': {'anyOf': [citations({aid}) for aid in aliases]}})
     return object_schema({'story': object_schema({'headline': {'type': 'string'}, 'is_conflict': {'type': 'boolean'},
         'freshness': {'anyOf': [object_schema({'article_id': {'type': 'string', 'enum': [aid]},
                 'passage_id': {'type': 'string', 'enum': list(passages[aid])}, 'development': {'type': 'string'}}) for aid in aliases]},
-        'claims': {'type': 'array', 'items': claim, 'minItems': 2, 'maxItems': 3},
+        'claims': object_schema({'fact': main, 'context': context}),
         'cross_check': object_schema({'status': {'type': 'string', 'enum': ['independent', 'single_source', 'not_independent']},
                                       'note': {'type': 'string'}})})})
 
@@ -75,10 +78,10 @@ STORY_SCHEMA = {
     'is_conflict': 'JSON boolean; true for armed-conflict reporting',
     'freshness': {'development': '具体的新进展，非旧事重述', 'article_id': 'provided source ID',
                   'passage_id': 'provided passage ID documenting the new development'},
-    'claims': [{'kind': 'fact', 'text': '说明主要事实、关键数字和必要归属，约70至130个汉字',
-                'evidence': [{'article_id': 'exact provided ID', 'passage_id': 'provided supporting passage ID'}]},
-               {'kind': 'context', 'text': '补充相关背景、各方回应或下一步安排，约50至90个汉字',
-                'evidence': [{'article_id': 'exact provided ID', 'passage_id': 'provided supporting passage ID'}]}],
+    'claims': {'fact': {'text': '说明主要事实、关键数字和必要归属，约70至130个汉字',
+                       'evidence': 'object keyed by EVERY provided source ID, each containing supporting passage IDs'},
+               'context': {'text': '补充相关背景、各方回应或下一步安排，约50至90个汉字',
+                           'evidence': 'object keyed by EVERY provided source ID; at least one source must cite a passage, unused sources have []'}},
     'cross_check': {'status': 'independent or single_source or not_independent',
                     'note': '中文简短说明核实情况'}}
 
@@ -142,6 +145,21 @@ def resolve_story(candidate, event, aliases, passages=None):
     if not isinstance(candidate, dict):
         raise EditorialError('Story must be an object')
     candidate = copy.deepcopy(candidate)
+    if isinstance(candidate.get('claims'), dict):
+        paragraphs = candidate['claims']
+        if set(paragraphs) != {'fact', 'context'}:
+            raise EditorialError('Fact and context paragraphs are required')
+        candidate['claims'] = []
+        for kind in ('fact', 'context'):
+            paragraph = paragraphs[kind]
+            if not isinstance(paragraph, dict) or not isinstance(paragraph.get('evidence'), dict) or set(paragraph['evidence']) != set(aliases):
+                raise EditorialError('Every source needs an explicit passage-reference list')
+            refs = []
+            for aid, ids in paragraph['evidence'].items():
+                if not isinstance(ids, list) or (kind == 'fact' and not ids):
+                    raise EditorialError('The main paragraph must cite supporting passages from every provided source')
+                refs.extend({'article_id': aid, 'passage_id': pid} for pid in ids)
+            candidate['claims'].append({'kind': kind, 'text': paragraph.get('text'), 'evidence': refs})
     for name in ('event_key', 'category', 'article_ids', 'scores'):
         candidate[name] = copy.deepcopy(event[name])
     if 'is_conflict' in event: candidate['is_conflict'] = event['is_conflict']
@@ -320,7 +338,10 @@ def write_story(config, articles, date, model, event, as_of):
     accepted = False
     for revision in range(config['model'].get('story_attempts', 2)):
         for attempt in range(2):
-            raw_candidate = model.ask(SYSTEM, payload).get('story', {})
+            writing_system = SYSTEM
+            if payload.get('review_issues'):
+                writing_system += '\nThis is a REQUIRED CORRECTION of a rejected draft. The previous_story is faulty, not a template. Resolve each issue below by removing the unsupported detail or correcting its supporting citations. Return changed Chinese prose; do not repeat the rejected paragraph unchanged. Review issues: ' + str(payload['review_issues'])
+            raw_candidate = model.ask(writing_system, payload).get('story', {})
             try:
                 story = resolve_story(raw_candidate, event, source_aliases, passages)
                 validate({'date': date, 'as_of': as_of.isoformat(), 'stories': [story]}, articles, single, date, enforce_balance=False)
@@ -329,6 +350,16 @@ def write_story(config, articles, date, model, event, as_of):
                 if attempt == 1: raise
                 payload['validation_error'] = str(exc)
                 payload['previous_story'] = raw_candidate
+        source_passages = []
+        alias_by_id = {aid: alias for alias, aid in source_aliases.items()}
+        def cite(reference):
+            key = f'q{len(source_passages)}'
+            source_passages.append({'id':key, 'source_id':alias_by_id[reference['article_id']], 'quote':reference['quote']})
+            return key
+        published_story = {'headline':story['headline'],
+            'paragraphs':[{'text':claim['text'], 'citations':[cite(r) for r in claim['evidence']]} for claim in story['claims']]}
+        checks = {k:story[k] for k in ('category','is_conflict','cross_check')}
+        checks['freshness'] = {'development':story['freshness']['development'], 'citation':cite(story['freshness'])}
         review = model.ask(VERIFY_SYSTEM, {
             'task': 'Verify this single story against provided source evidence. Check EVERY Chinese assertion, '
                     'dates/numbers, neutral political language, source independence, headline entailment, '
@@ -340,8 +371,14 @@ def write_story(config, articles, date, model, event, as_of):
                     'No claim may rest on navigation or unrelated recommended links. '
                     'Each assertion must be supported by that claim\'s cited quotes; facts found elsewhere require correcting the citations. '
                     'The freshness quote must document the substantive new finding or development, not an old background event. '
+                    'ONLY the headline and paragraph texts in published_story appear in the email. '
+                    'Source quotations, article bodies and internal_checks are NOT published summary assertions. '
+                    'Do not criticize a quoted source claim as though it were in the Chinese summary. '
+                    'For each issue, identify the exact erroneous published Chinese phrase and its citation mismatch; be concise. '
                     'Return {"approved": true/false, "issues": [specific problems]}. Fail closed.',
-            'story': story, 'articles': evidence, 'response_schema': REVIEW_SCHEMA})
+            'published_story':published_story, 'internal_checks':checks, 'source_passages':source_passages,
+            'articles':[dict({k:v for k,v in source.items() if k != 'evidence'},id=alias)
+                        for source,alias in zip(evidence,source_aliases)], 'response_schema': REVIEW_SCHEMA})
         if review.get('approved') is True and review.get('issues') == []:
             accepted = True
             break
