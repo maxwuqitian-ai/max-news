@@ -44,7 +44,7 @@ def selection_audit_schema(events):
         'genre': {'type': 'string', 'enum': ['breaking_news', 'explainer', 'recap', 'opinion', 'sports', 'entertainment', 'personal_interest']},
         'reason': {'type': 'string'},
         'category': {'type': 'string', 'enum': ['politics', 'economics', 'business', 'technology', 'world']},
-        'same_event': {'type': 'boolean'}, 'new_development': {'type': 'boolean'},
+        'all_sources_cover_this_event': {'type': 'boolean'}, 'new_development': {'type': 'boolean'},
         'globally_consequential': {'type': 'boolean'},
         'duplicate_of': {'type': 'string', 'enum': ['none'] + [e['event_key'] for e in events]}})
     return object_schema({'checks': object_schema({e['event_key']: check for e in events})})
@@ -57,7 +57,7 @@ def validate_selection_audit(audit, events):
     for event in events:
         c = checks[event['event_key']]
         if (not isinstance(c, dict) or c.get('genre') != 'breaking_news' or c.get('category') != event['category']
-                or any(c.get(k) is not True for k in ('same_event', 'new_development', 'globally_consequential'))
+                or any(c.get(k) is not True for k in ('all_sources_cover_this_event', 'new_development', 'globally_consequential'))
                 or c.get('duplicate_of') != 'none' or not c.get('reason')):
             issues.append(f"{event['event_key']}: {c}")
     if issues: raise EditorialError('Selection review failed: ' + '; '.join(issues))
@@ -179,7 +179,9 @@ def generate_local(config, articles, date, model, as_of):
                 'task': 'Audit the selected events BEFORE writing. Each event must contain only coverage of the SAME event, '
                         'and its event key and category must match its actual source titles. Reject unrelated merged articles, '
                         'misclassified categories, minor human-interest stories, explainers, recaps and duplicate events. '
-                        'Assess EACH event separately: genre, category, same_event, new_development, globally_consequential, duplicate_of and reason. '
+                        'Assess EACH event separately: genre, category, all_sources_cover_this_event, new_development, globally_consequential, duplicate_of and reason. '
+                        'all_sources_cover_this_event asks whether sources WITHIN this individual event cover the same development; it is true for a matching single-source event. '
+                        'Different selected events should of course be distinct. '
                         'Cricket/sports fixtures are sports, never company business. A campaign rally interruption is minor without a major new policy. '
                         'Government diplomatic/legal actions are politics; do not relabel them as economics to meet balance limits. '
                         'Explain what actually changed and its global consequence. Set false if evidence is inadequate. '
