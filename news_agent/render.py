@@ -23,6 +23,13 @@ TEMPLATE = '''<!doctype html><html lang="zh-Hans"><head><meta charset="utf-8"><m
 </div></body></html>'''
 
 
+
+def ordered_stories(stories, section_order=None):
+    """Keep ranking within sections while matching the email's presentation order."""
+    positions={category:i for i,category in enumerate(section_order or ORDER)}
+    return sorted(stories,key=lambda story:positions['politics' if story['category']=='world' else story['category']])
+
+
 def local_time(value):
     if not value: return '发表时间未核实，仅作背景'
     return datetime.fromisoformat(value.replace('Z', '+00:00')).astimezone(ZoneInfo('America/New_York')).strftime('%Y-%m-%d %H:%M')

@@ -271,3 +271,10 @@ def generate(config, articles, edition_date, model=None, as_of=None):
         edition['model'] = config['model']['name']
         return edition
     finally: model.close()
+
+
+def normalize_review(review, flag):
+    """Canonicalize an explicit empty marker only after a positive assessment."""
+    if isinstance(review,dict) and review.get(flag) is True and review.get('issues')==['None']:
+        return dict(review,issues=[])
+    return review

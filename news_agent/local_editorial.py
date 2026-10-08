@@ -339,6 +339,8 @@ def generate_local(config, articles, date, model, as_of):
             LOG.warning('Omitting unapproved event=%s reason=%s', event['event_key'], str(exc))
     edition['stories'] = balance_verified_stories(edition['stories'], config)
     validate(edition, articles, config, date)
+    from .render import ordered_stories
+    edition['stories']=ordered_stories(edition['stories'],config['editorial'].get('section_order'))
     # The no-thinking model misreads explicit Chinese reported-speech attribution.
     # Spend reasoning tokens on the final audit only; ranking stays inexpensive.
     from .editorial import Model
@@ -367,6 +369,8 @@ def generate_local(config, articles, date, model, as_of):
                      'original_reporting':[{'publisher':by_id[aid].publisher,'headline':by_id[aid].title,
                          'excerpt':by_id[aid].publisher_excerpt} for aid in s['article_ids']] if excerpt_mode else [],
                      'cross_check':s['cross_check']} for s in edition['stories']]})
+    from .editorial import normalize_review
+    review=normalize_review(review,'approved')
     if review.get('approved') is not True or review.get('issues') != []:
         raise EditorialError('Local final edition review failed: '+str(review.get('issues',[])))
     edition.update(review=review, model=config['model']['name'],

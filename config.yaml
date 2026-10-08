@@ -23,6 +23,8 @@ model:
   base_url: http://127.0.0.1:11434
   name: qwen3.5:9b
   thinking: false
+  report_review_thinking: true
+  report_review_max_output_tokens: 2000
   final_review_thinking: true
   final_review_max_output_tokens: 6000
   grounded_translation: true

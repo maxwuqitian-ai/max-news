@@ -450,3 +450,27 @@ def test_selection_does_not_hide_military_reports_in_nonconflict_slots(config):
     military=[e for e in selected if any(aid in {'a10','a11','a12'} for aid in e['article_ids'])]
     assert military and all(e['is_conflict'] for e in military)
     assert len(military)<=len(selected)*config['editorial']['conflict_max_share']
+
+
+def test_final_review_order_matches_email_sections_and_retains_rank():
+    from news_agent.render import ordered_stories
+    stories=[{'category':c,'headline':h} for c,h in [('business','acquisition'),
+        ('economics','markets'),('world','world event'),('politics','policy'),
+        ('business','funding'),('technology','product')]]
+    assert [s['headline'] for s in ordered_stories(stories)]==[
+        'world event','policy','markets','acquisition','funding','product']
+    assert [s['headline'] for s in ordered_stories(stories,['economics','business','politics','technology'])]==[
+        'markets','acquisition','funding','world event','policy','product']
+    assert stories[0]['headline']=='acquisition'
+
+
+def test_empty_issue_marker_preserves_negative_and_substantive_assessments():
+    from news_agent.editorial import normalize_review
+    for flag in ('consistent','approved'):
+        positive={flag:True,'issues':['None']}
+        assert normalize_review(positive,flag)=={flag:True,'issues':[]}
+        assert positive['issues']==['None']
+        negative={flag:False,'issues':['None']}
+        assert normalize_review(negative,flag)==negative
+        substantive={flag:True,'issues':['Conflicting casualty figures']}
+        assert normalize_review(substantive,flag)==substantive
