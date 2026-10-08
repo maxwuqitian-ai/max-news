@@ -10,8 +10,9 @@ newsletter:
   subject: '全球每日新闻'
   output_dir: output
   state_dir: state
-  # Keep disabled until a reviewed sample and manual inbox test both succeed.
-  delivery_enabled: false
+  # Activated at the user's request after the reviewed sample was accepted by Resend.
+  # Editorial validation remains mandatory; failed generation never sends an email.
+  delivery_enabled: true
   recipient_env: NEWS_RECIPIENT
 model:
   provider: ollama

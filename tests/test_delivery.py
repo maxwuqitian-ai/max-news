@@ -40,9 +40,13 @@ def test_timeout_blocks_automatic_resend(config, credentials):
     assert route.call_count == 1
 
 
+@respx.mock
 def test_disabled_daily_delivery(config, credentials):
+    config['newsletter']['delivery_enabled'] = False
+    route = respx.post('https://api.resend.com/emails').mock(return_value=httpx.Response(200, json={'id': 'must-not-send'}))
     with pytest.raises(DeliveryError, match='disabled'):
         deliver(config, 'html', 'text', '2026-01-15')
+    assert route.call_count == 0
 
 
 @respx.mock
