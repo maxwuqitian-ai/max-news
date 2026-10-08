@@ -47,7 +47,10 @@ def classify(catalog, model, system, config):
                     'Use a concise lowercase English event_key for the concrete development. '
                     'Reports of the SAME event must use the SAME key, including existing keys below. '
                     'Different countries/entities/actions must not share a key. is_conflict is true for armed-conflict reporting.',
-            'articles': batch,
+            # Genre/event identity/impact depend on original reporting. Recency
+            # is recalculated by select(), and freshness checked before delivery.
+            # An advancing clock must not invalidate unchanged source ratings.
+            'articles': [{k:v for k,v in article.items() if k!='published_age_hours'} for article in batch],
             'category_definitions': {'politics': 'government, elections, diplomacy, national laws and government policy',
                 'economics': 'macroeconomic data, financial markets, trade and economy-wide conditions',
                 'business': 'company transactions, acquisitions, earnings, competition and operations',
@@ -96,7 +99,7 @@ def classify(catalog, model, system, config):
                 payload['validation_error'] = str(exc)
     return ratings
 
-def select(catalog, ratings, config, *, excluded=frozenset()):
+def select(catalog, ratings, config, *, excluded=frozenset(),eligible_primary=None):
     policy, n = config['editorial'], config['newsletter']
     groups = {}
     for article in catalog:
@@ -111,13 +114,15 @@ def select(catalog, ratings, config, *, excluded=frozenset()):
                 or max(r['global_relevance'] for _, r in reports) < policy.get('minimum_global_relevance', 3)):
             continue
         reports.sort(key=lambda ar: ar[0]['published_age_hours'])
-        primary, rating = reports[0]
+        primaries=[ar for ar in reports if eligible_primary is None or ar[0]['id'] in eligible_primary]
+        if not primaries: continue
+        primary, rating = primaries[0]
         scores = {'consequence': max(r['consequence'] for _, r in reports),
                   'timeliness': round(max(0, 5 * (1 - primary['published_age_hours'] / 24)), 2),
                   'credibility': 5 if primary.get('family') in ('BBC', 'AP', 'Reuters', 'NPR') else 4, 'global_relevance': max(r['global_relevance'] for _, r in reports)}
         chosen = [primary]
         families = {primary.get('family')}
-        for a, _ in reports[1:]:
+        for a, _ in reports:
             if a.get('family') not in families:
                 chosen.append(a); families.add(a.get('family'))
                 if len(chosen) == 3: break

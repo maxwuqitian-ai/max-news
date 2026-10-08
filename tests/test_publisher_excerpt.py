@@ -30,6 +30,26 @@ def test_incomplete_source_prefix_cannot_pass_delivery_verification():
     with pytest.raises(EditorialError,match='complete publisher sentence'):
         verify_story(story,[article])
 
+def test_conflicting_report_is_checked_even_when_it_does_not_fit_email():
+    from news_agent.publisher_excerpt import check_reports
+    primary,event=fixture();secondary=copy.deepcopy(primary)
+    secondary.id='second-synthetic-report';secondary.publisher='另一合成测试媒体'
+    secondary.url='https://other-publisher.example/test';secondary.family='other-synthetic'
+    secondary.publisher_excerpt=('仅供合成测试的虚构文字，不能作为真实报道，'*5
+        +secondary.publisher_excerpt.replace('0.25','0.50'))
+    secondary.evidence=secondary.title+'. '+secondary.publisher_excerpt
+    event['article_ids']=[primary.id,secondary.id]
+    story=compile_story(event,[primary,secondary])
+    assert story['article_ids']==[primary.id]
+    class Reviewer:
+        def ask(self,system,payload):
+            assert len(payload['reports'])==2
+            assert '0.50' in payload['reports'][1]['excerpt']
+            return {'consistent':False,'issues':['两篇合成报道的数字冲突']}
+    with pytest.raises(EditorialError,match='cross-check'):
+        check_reports(story,[primary,secondary],Reviewer(),'2026-01-15',
+            datetime.fromisoformat('2026-01-15T12:00:00+00:00'),report_ids=event['article_ids'])
+
 def test_source_preserving_briefing_has_simplified_chinese_and_verbatim_provenance(config):
     article,event=fixture();story=compile_story(event,[article])
     config['editorial']['mode']='publisher_chinese_excerpt'

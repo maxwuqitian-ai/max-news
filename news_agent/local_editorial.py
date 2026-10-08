@@ -57,6 +57,13 @@ Related background about a different actor is allowed when clearly distinguished
 For every rejection identify the actual event_key and exact offending Chinese text, and explain its concrete
 violation. Reject substantive problems, not hypothetical verification gaps or optional extra context.'''
 
+EDITION_AUDIT_SYSTEM += '''
+The original_reporting fields contain authentic captured publisher headlines and excerpts, not proposed
+assistant copy. A publisher headline is source evidence for its explicitly stated facts, including contextual
+clauses omitted from the shorter RSS lead. Compare displayed wording to that original reporting; do not
+mistake an authentic publisher headline for a fabricated assistant assertion just because its RSS excerpt
+focuses on the main development. Reject actual contradictions or misleading changes in certainty/attribution.'''
+
 def object_schema(properties):
     return {'type': 'object', 'properties': properties, 'required': list(properties), 'additionalProperties': False}
 
@@ -218,8 +225,7 @@ def resolve_story(candidate, event, aliases, passages=None):
 def generate_local(config, articles, date, model, as_of):
     excerpt_mode = config['editorial'].get('mode') == 'publisher_chinese_excerpt'
     if excerpt_mode:
-        from .publisher_excerpt import eligible, compile_story, check_reports
-        articles = [a for a in articles if eligible(a,exclude_opinion=False)]
+        from .publisher_excerpt import eligible, opinion_url, compile_story, check_reports
     n = config['newsletter']
     by_id = {a.id: a for a in articles}
     catalog, aliases = [], {}
@@ -235,16 +241,18 @@ def generate_local(config, articles, date, model, as_of):
         aid = f'a{len(catalog)}_' + '_'.join(words[:5])[:(16 if excerpt_mode else 48)]
         aliases[aid] = article.id
         item = {'id': aid, 'title': article.title, 'publisher': article.publisher, 'family': article.family,
+                'published_at':article.published,
                 'published_age_hours': round((as_of - timestamp(article.published)).total_seconds() / 3600, 2)}
         excerpt_size = config['model'].get('selection_excerpt_characters', 240)
         if excerpt_size: item['excerpt'] = lead[:excerpt_size]
         catalog.append(item)
     from .selection import classify, select
     ratings = classify(catalog, model, RANK_SYSTEM, config)
-    excluded = {alias for alias,aid in aliases.items() if excerpt_mode and not eligible(by_id[aid])}
+    excluded = {alias for alias,aid in aliases.items() if excerpt_mode and opinion_url(by_id[aid].url)}
+    publishable = {alias for alias,aid in aliases.items() if eligible(by_id[aid])} if excerpt_mode else None
     selection_attempts = config['model'].get('selection_attempts', 3)
     for attempt in range(selection_attempts):
-        selected = select(catalog, ratings, config, excluded=excluded)
+        selected = select(catalog, ratings, config, excluded=excluded,eligible_primary=publishable)
         events = decode_selection(selected, aliases, config)
         audit = model.ask(RANK_SYSTEM, {
             'task': 'Audit the selected events BEFORE writing. Assess EACH separately: genre, category, '
@@ -304,7 +312,7 @@ def generate_local(config, articles, date, model, as_of):
         try:
             if excerpt_mode:
                 story=compile_story(event,articles)
-                check_reports(story,articles,model,date,as_of)
+                check_reports(story,articles,model,date,as_of,report_ids=event['article_ids'])
             else: story=write_story(config, articles, date, model, event, as_of)
             edition['stories'].append(story)
         except EditorialError as exc:
@@ -336,6 +344,8 @@ def generate_local(config, articles, date, model, as_of):
         'stories': [{'event_key': s['event_key'], 'headline': s['headline'], 'category': s['category'],
                      'paragraphs': [c['text'] for c in s['claims'] if c.get('placement')!='headline'],
                      'source_names':[source['name'] for source in s['sources']],
+                     'original_reporting':[{'publisher':by_id[aid].publisher,'headline':by_id[aid].title,
+                         'excerpt':by_id[aid].publisher_excerpt} for aid in s['article_ids']] if excerpt_mode else [],
                      'cross_check':s['cross_check']} for s in edition['stories']]})
     if review.get('approved') is not True or review.get('issues') != []:
         raise EditorialError('Local final edition review failed: '+str(review.get('issues',[])))

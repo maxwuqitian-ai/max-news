@@ -7,8 +7,8 @@ def load(path: str) -> dict:
     config = yaml.safe_load(Path(path).read_text())
     n = config['newsletter']
     ZoneInfo(n['timezone'])
-    if not 6 <= n['min_stories'] <= n['max_stories'] <= 15:
-        raise ValueError('Configure between 6 and 15 substantial stories')
+    if not 4 <= n['min_stories'] <= n['max_stories'] <= 15:
+        raise ValueError('Configure between 4 and 15 substantial stories')
     if not 1 <= n['lookback_hours'] <= 72 or n['max_candidates'] < n['min_stories']:
         raise ValueError('Invalid collection limits')
     if n['lookback_hours'] > 24:

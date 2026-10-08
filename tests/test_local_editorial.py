@@ -41,6 +41,32 @@ def test_reasoning_output_limit_continues_once_and_preserves_rejection(config):
 
 
 @respx.mock
+def test_classification_cache_uses_immutable_source_not_advancing_age(config,tmp_path):
+    import json
+    from news_agent.selection import classify
+    config['model'].update(provider='ollama',api_key_env=None,base_url='http://127.0.0.1:11434',cache_dir=str(tmp_path))
+    rating={'category':'economics','genre':'breaking_news','event_key':'synthetic_rate_change',
+        'is_conflict':False,'consequence':4,'global_relevance':4}
+    route=respx.post('http://127.0.0.1:11434/api/chat').mock(return_value=httpx.Response(200,
+        json={'message':{'content':json.dumps({'ratings':{'a0_test':rating}})}}))
+    catalog=[{'id':'a0_test','title':'合成测试央行调整利率','publisher':'合成测试媒体',
+        'family':'synthetic','published_at':'2026-01-15T11:00:00+00:00','published_age_hours':1}]
+    model=Model(config['model'])
+    try:
+        assert classify(catalog,model,'Classify source data',config)['a0_test']==rating
+        catalog[0]['published_age_hours']=2
+        assert classify(catalog,model,'Classify source data',config)['a0_test']==rating
+        assert len(route.calls)==1
+        payload=json.loads(json.loads(route.calls[0].request.content)['messages'][1]['content'])
+        assert 'published_age_hours' not in payload['articles'][0]
+        assert payload['articles'][0]['published_at']==catalog[0]['published_at']
+        catalog[0]['published_at']='2026-01-15T11:30:00+00:00'
+        classify(catalog,model,'Classify source data',config)
+        assert len(route.calls)==2
+    finally: model.close()
+
+
+@respx.mock
 def test_local_schema_constrains_category_names_without_copying_placeholders(config):
     import json
     from news_agent.selection import rating_schema
@@ -193,6 +219,25 @@ def test_programmatic_selection_groups_duplicates_and_excludes_sports(config):
     assert 'a11' not in {aid for e in events for aid in e['article_ids']}
     company = next(e for e in events if e['event_key'] == 'event_6')
     assert set(company['article_ids']) == {'a6', 'a10'}
+
+
+def test_selection_uses_chinese_primary_and_english_corroboration(config):
+    from news_agent.selection import select
+    catalog = [{'id':f'a{i}','title':f'Article {i}','family':f'publisher-{i}',
+                'published_age_hours':2} for i in range(12)]
+    categories=['politics']*3+['economics']*3+['business']*2+['technology']*2+['business']*2
+    ratings={a['id']:{'category':categories[i],'genre':'breaking_news','event_key':f'event_{i}',
+        'is_conflict':False,'consequence':4,'global_relevance':4} for i,a in enumerate(catalog)}
+    # An English report is newer, but the published text must remain Chinese.
+    catalog[10]['published_age_hours']=1
+    ratings['a10']['event_key']='event_6'
+    # An English-only event cannot enter this source-preserving edition.
+    ratings['a11'].update(consequence=5,global_relevance=5)
+    events=select(catalog,ratings,config,eligible_primary={f'a{i}' for i in range(10)})
+    assert len(events)==10
+    company=next(e for e in events if e['event_key']=='event_6')
+    assert company['article_ids']==['a6','a10']
+    assert 'a11' not in {aid for e in events for aid in e['article_ids']}
 
 
 def test_writer_passage_references_resolve_to_original_quotes(artifacts):
