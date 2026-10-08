@@ -1,6 +1,7 @@
 """Bounded-context editing for a CPU-hosted Chinese-capable local model."""
 import copy
 import logging
+import re
 from .editorial import EditorialError, SYSTEM, validate
 from .freshness import timestamp
 
@@ -123,7 +124,10 @@ def generate_local(config, articles, date, model, as_of):
         lead = article.evidence
         if lead.startswith(article.title):
             lead = lead[len(article.title):].lstrip('. ')
-        aid = f'a{len(catalog)}'
+        # Include headline words so the model need not remember a positional
+        # number-to-story lookup while grouping a multilingual catalog.
+        words = re.findall(r'\w+', article.title.casefold())
+        aid = f'a{len(catalog)}_' + '_'.join(words[:5])[:48]
         aliases[aid] = article.id
         item = {'id': aid, 'title': article.title, 'publisher': article.publisher,
                 'published_age_hours': round((as_of - timestamp(article.published)).total_seconds() / 3600, 2)}

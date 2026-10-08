@@ -45,7 +45,8 @@ def test_local_pipeline_reviews_every_story_and_final_edition(config, artifacts)
         drafts = 0
         def ask(self, system, payload):
             self.calls += 1
-            if payload['task'].startswith('Group reporting'): return {'events': events}
+            if payload['task'].startswith('Group reporting'):
+                return {'events': [dict(e, article_ids=[payload['articles'][i]['id']]) for i, e in enumerate(events)]}
             if not payload['task'].startswith('Write ONE'): return {'approved': True, 'issues': []}
             story = copy.deepcopy(edition['stories'][self.drafts])
             self.drafts += 1
@@ -87,7 +88,8 @@ def test_local_rejects_mismatched_selection_before_writing(config, artifacts):
     class ModelRejectingSelection:
         drafts = 0
         def ask(self, system, payload):
-            if payload['task'].startswith('Group reporting'): return {'events': events}
+            if payload['task'].startswith('Group reporting'):
+                return {'events': [dict(e, article_ids=[payload['articles'][i]['id']]) for i, e in enumerate(events)]}
             if payload['task'].startswith('Write ONE'): self.drafts += 1
             return {'approved': False, 'issues': ['Event key does not match the actual source title']}
         def close(self): pass
