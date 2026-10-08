@@ -1,0 +1,841 @@
+{
+  "date": "2026-10-08",
+  "as_of": "2026-10-08T13:41:41.993805+00:00",
+  "stories": [
+    {
+      "event_key": "korea_ukraine_ambassador_recall",
+      "category": "politics",
+      "headline": "韩国召回驻乌克兰大使，朝鲜战俘移交争议升级",
+      "article_ids": [
+        "045845acfa6c0747",
+        "1bd84ab444f01174"
+      ],
+      "is_conflict": false,
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "freshness": {
+        "article_id": "045845acfa6c0747",
+        "quote": "South Korea recalls Ukraine ambassador over prisoner-of-war row - BBC News BBC News South Korea recalls Ukraine envoy over prisoner-of-war row Image source, Getty Images By Yvette Tan Published 3 hours ago South Korea has said it will recall its ambassador to Ukraine, the latest escalation in a diplomatic spat between both countries.",
+        "development": "韩国宣布召回驻乌克兰大使，抗议乌方公开两名朝鲜战俘被移交韩国的消息。韩国称双方约定保密，乌克兰则否认存在保密协议；双方对这一关键问题仍有分歧。"
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "韩国宣布召回驻乌克兰大使，抗议乌方公开两名朝鲜战俘被移交韩国的消息。韩国称双方约定保密，乌克兰则否认存在保密协议；双方对这一关键问题仍有分歧。",
+          "evidence": [
+            {
+              "article_id": "045845acfa6c0747",
+              "quote": "South Korea recalls Ukraine ambassador over prisoner-of-war row - BBC News BBC News South Korea recalls Ukraine envoy over prisoner-of-war row Image source, Getty Images By Yvette Tan Published 3 hours ago South Korea has said it will recall its ambassador to Ukraine, the latest escalation in a diplomatic spat between both countries."
+            },
+            {
+              "article_id": "045845acfa6c0747",
+              "quote": "Seoul says Ukraine broke an agreement to keep the transfer a secret but Zelensky's office maintains that there was no non-disclosure agreement in place."
+            },
+            {
+              "article_id": "1bd84ab444f01174",
+              "quote": "Seth Wenig/AP hide caption toggle caption i Seth Wenig/AP SEOUL, South Korea — South Korea said Thursday it will recall its ambassador to Ukraine, stepping up its protest against Ukrainian President Volodymyr Zelenskyy's recent revelation of a supposedly secret transfer of two North Korean prisoners of war to South Korea."
+            },
+            {
+              "article_id": "1bd84ab444f01174",
+              "quote": "South Korea has accused Ukraine of violating a nondisclosure agreement on their transfer in mid-September, but Kyiv has denied agreeing to such a deal."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "两名士兵此前在乌克兰战争中被俘，并表达了前往韩国的意愿。韩国表示仍会继续与乌方磋商，目前没有公布大使回国的具体日期。",
+          "evidence": [
+            {
+              "article_id": "045845acfa6c0747",
+              "quote": "The two North Korean soldiers, who were among thousands from the country supporting Russia in the Ukraine war, had earlier told local media they wanted to be sent to South Korea."
+            },
+            {
+              "article_id": "045845acfa6c0747",
+              "quote": "In a statement on Thursday, South Korea's Foreign Ministry said it would \"continue consultations with the Ukrainian side\", adding that it expected that \"various outstanding issues...[would] be resolved smoothly\"."
+            },
+            {
+              "article_id": "1bd84ab444f01174",
+              "quote": "South Korea's Foreign Ministry didn't say when the ambassador, Park Hee-chang, will be brought back home."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "not_independent",
+        "note": "对照多家报道；共同引用的官方或公司说法未作为独立事实确认。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "045845acfa6c0747",
+          "name": "BBC",
+          "url": "https://www.bbc.co.uk/news/articles/ckwy48rrz95vo?at_medium=RSS&at_campaign=rss",
+          "time": "2026-10-08T09:56:02.030000+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        },
+        {
+          "id": "1bd84ab444f01174",
+          "name": "NPR",
+          "url": "https://www.npr.org/2026/10/08/g-s1-147115/south-korea-to-recall-its-ambassador-to-ukraine-over-north-korean-pow-dispute",
+          "time": "2026-10-08T12:13:54+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "italy_electoral_reform_vote",
+      "category": "politics",
+      "headline": "意大利议会通过选举改革，获胜阵营可获额外席位",
+      "article_ids": [
+        "5dc120103756dd54"
+      ],
+      "is_conflict": false,
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "freshness": {
+        "article_id": "5dc120103756dd54",
+        "quote": "Lawmakers voted 227 to 164 in favour of moving to a fully proportional system, which Meloni has argued will boost the chance of clear winners and more stable government.",
+        "development": "意大利议会以227票赞成、164票反对通过选举制度改革，改用完全比例代表制。得票最多且超过42%的政党或联盟，将获得105个额外议席，其中众议院70席、参议院35席。"
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "意大利议会以227票赞成、164票反对通过选举制度改革，改用完全比例代表制。得票最多且超过42%的政党或联盟，将获得105个额外议席，其中众议院70席、参议院35席。",
+          "evidence": [
+            {
+              "article_id": "5dc120103756dd54",
+              "quote": "Lawmakers voted 227 to 164 in favour of moving to a fully proportional system, which Meloni has argued will boost the chance of clear winners and more stable government."
+            },
+            {
+              "article_id": "5dc120103756dd54",
+              "quote": "A party or coalition which emerges with the largest share of the votes - provided this exceeds 42% - will be awarded 105 additional seats in parliament (70 in the lower house and 35 in the senate), which could turn a narrow victory into a more comfortable majority."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "总理梅洛尼称改革有助于形成稳定政府，反对党则指责执政联盟借此提高连任机会。联盟还须在选举前公布共同总理候选人及政治纲领；下一次大选原定于明年举行。",
+          "evidence": [
+            {
+              "article_id": "5dc120103756dd54",
+              "quote": "Prime Minister Giorgia Meloni says the move will deliver more stable government, but opposition parties say her aim is to stay in power."
+            },
+            {
+              "article_id": "5dc120103756dd54",
+              "quote": "Parties proposing to form a coalition will be required to put forward their joint candidate for prime minister, and their political programme, before any general election."
+            },
+            {
+              "article_id": "5dc120103756dd54",
+              "quote": "Italy overhauls electoral system after fiercely contested debate - BBC News BBC News Italy overhauls electoral system after fiercely contested debate Image source, Getty Images Image caption, Opposition parties say the move is designed to keep Meloni's right-wing coalition in power By Maia Davies Published 8 October 2026, 13:02 BST Updated 1 hour ago Italy's parliament has approved fiercely contested changes to the country's electoral system championed by Prime Minister Giorgia Meloni ahead of elections due next year."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "single_source",
+        "note": "单一报道来源。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "5dc120103756dd54",
+          "name": "BBC",
+          "url": "https://www.bbc.co.uk/news/articles/c6zxjdw8rdl5o?at_medium=RSS&at_campaign=rss",
+          "time": "2026-10-08T12:02:04.487000+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "jerusalem_uk_diplomatic_staff",
+      "category": "politics",
+      "headline": "英以就东耶路撒冷领事机构发生分歧，英国称服务将继续",
+      "article_ids": [
+        "c2494a992a48d078"
+      ],
+      "is_conflict": false,
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "freshness": {
+        "article_id": "c2494a992a48d078",
+        "quote": "\"We did not want it to come to this,\" Israeli Foreign Minister Gideon Saar wrote on social media, as he said 20 diplomats and the consul general would leave Israel while a task force of seven could remain in the building \"with a very limited scope of activity\".",
+        "development": "以色列表示，英国驻东耶路撒冷机构的大部分外交人员将离开，只允许七人团队保留有限活动。英国外交大臣米利班德则称部分人员因安全原因暂时撤离，建筑不会关闭，并将继续以英国代表机构形式运作。"
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "以色列表示，英国驻东耶路撒冷机构的大部分外交人员将离开，只允许七人团队保留有限活动。英国外交大臣米利班德则称部分人员因安全原因暂时撤离，建筑不会关闭，并将继续以英国代表机构形式运作。",
+          "evidence": [
+            {
+              "article_id": "c2494a992a48d078",
+              "quote": "\"We did not want it to come to this,\" Israeli Foreign Minister Gideon Saar wrote on social media, as he said 20 diplomats and the consul general would leave Israel while a task force of seven could remain in the building \"with a very limited scope of activity\"."
+            },
+            {
+              "article_id": "c2494a992a48d078",
+              "quote": "UK Foreign Secretary Ed Miliband responded that some staff had been \"temporarily withdrawn\" for security reasons, but stressed the mission will \"work with the Palestinian people\"."
+            },
+            {
+              "article_id": "c2494a992a48d078",
+              "quote": "Most UK diplomats to leave East Jerusalem consulate, Israel says, as Miliband says 'vital services' to remain - BBC News BBC News Most UK diplomats to leave East Jerusalem consulate, Israel says, as Miliband says 'vital services' to remain Image source, Reuters By Adam Goldsmith and James Landale , Diplomatic correspondent Published 8 October 2026, 07:35 BST Updated 5 hours ago Most diplomats will leave the British consulate in occupied East Jerusalem, Israel says, but the UK insists the building \"will not be closing\", and will operate as a \"UK Mission\"."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "这场争议源于英国对被占领约旦河西岸以色列定居点实施制裁。该机构负责英国与巴勒斯坦方面的关系，与英国驻特拉维夫大使馆职能不同。双方对机构是否关闭的表述并不一致。",
+          "evidence": [
+            {
+              "article_id": "c2494a992a48d078",
+              "quote": "Israel said in September it would shut the consulate, in retaliation for UK sanctions on Israeli settlements in the occupied West Bank which are illegal under international law."
+            },
+            {
+              "article_id": "c2494a992a48d078",
+              "quote": "It is distinct from the UK embassy in Tel Aviv, which is the UK's main diplomatic hub with Israel."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "single_source",
+        "note": "单一报道来源。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "c2494a992a48d078",
+          "name": "BBC",
+          "url": "https://www.bbc.co.uk/news/articles/cw33xd6vegnno?at_medium=RSS&at_campaign=rss",
+          "time": "2026-10-08T06:35:43.312000+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "kramatorsk_bus_attack",
+      "category": "politics",
+      "headline": "乌克兰官员称克拉马托尔斯克公交车遇袭，至少30人死亡",
+      "article_ids": [
+        "672400258c37a954",
+        "eb0c218e01f8eba1"
+      ],
+      "is_conflict": true,
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "freshness": {
+        "article_id": "672400258c37a954",
+        "quote": "Russian strike on buses kills at least 30, say officials, as deadly attacks on Ukraine surge.",
+        "development": "乌克兰救援官员称，俄军滑翔炸弹袭击东部克拉马托尔斯克的两辆民用公交车，造成至少30人死亡。当地官员另报告至少18人受伤；俄方尚未对这次袭击作出回应。"
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "乌克兰救援官员称，俄军滑翔炸弹袭击东部克拉马托尔斯克的两辆民用公交车，造成至少30人死亡。当地官员另报告至少18人受伤；俄方尚未对这次袭击作出回应。",
+          "evidence": [
+            {
+              "article_id": "672400258c37a954",
+              "quote": "Russian strike on buses kills at least 30, say officials, as deadly attacks on Ukraine surge."
+            },
+            {
+              "article_id": "672400258c37a954",
+              "quote": "Another 18 people were wounded, said Donetsk regional head Vadym Filashkin, accusing Russia of targeting buses carrying passengers to kill as many civilians as possible."
+            },
+            {
+              "article_id": "672400258c37a954",
+              "quote": "Moscow is yet to comment on the latest attack."
+            },
+            {
+              "article_id": "eb0c218e01f8eba1",
+              "quote": "Evgeniy Maloletka/AP hide caption toggle caption i Evgeniy Maloletka/AP KYIV, Ukraine — Thirty people were killed and at least 18 were injured by Russian strikes in eastern Ukraine that included an attack on a public bus, authorities said Thursday, as an intensive pre-winter wave of attacks continued and power outages worsened in the capital Kyiv."
+            },
+            {
+              "article_id": "eb0c218e01f8eba1",
+              "quote": "Russian strikes in eastern Ukraine have killed 30 people and injured at least 18, according to authorities."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "由于安全局势恶化，克拉马托尔斯克及邻近斯洛维扬斯克已暂停公共交通。乌克兰方面指责俄军蓄意针对平民，俄方尚未回应这一指控。",
+          "evidence": [
+            {
+              "article_id": "672400258c37a954",
+              "quote": "Given the sharp deterioration of security in the two neighbouring cities, he said all public transport had been ordered to stop."
+            },
+            {
+              "article_id": "672400258c37a954",
+              "quote": "Another 18 people were wounded, said Donetsk regional head Vadym Filashkin, accusing Russia of targeting buses carrying passengers to kill as many civilians as possible."
+            },
+            {
+              "article_id": "eb0c218e01f8eba1",
+              "quote": "Ukraine invasion — explained Drones buzz overhead, troops hunker underground in Ukraine's hellish kill zone Vadym Filashkin, head of the regional military administration, said public transport in Kramatorsk and the neighboring city of Sloviansk, in Ukraine's Donetsk region, was halted because of the sharp deterioration in security."
+            },
+            {
+              "article_id": "eb0c218e01f8eba1",
+              "quote": "He accused Russia of deliberately targeting civilians, adding: \"In such circumstances, we have no right to risk the lives of passengers and drivers."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "not_independent",
+        "note": "对照多家报道；共同引用的官方或公司说法未作为独立事实确认。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "672400258c37a954",
+          "name": "BBC",
+          "url": "https://www.bbc.co.uk/news/articles/c875pwq134l3o?at_medium=RSS&at_campaign=rss",
+          "time": "2026-10-08T10:16:33.663000+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        },
+        {
+          "id": "eb0c218e01f8eba1",
+          "name": "NPR",
+          "url": "https://www.npr.org/2026/10/08/g-s1-147106/russia-ukraine-war",
+          "time": "2026-10-08T11:25:28+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "oil_shipping_supply_prices",
+      "category": "economics",
+      "headline": "航运遇袭与供给担忧推高油价，布伦特原油突破105美元",
+      "article_ids": [
+        "8d5b68a78606145d"
+      ],
+      "is_conflict": false,
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "freshness": {
+        "article_id": "8d5b68a78606145d",
+        "quote": "Brent crude tops $105 a barrel amid attacks on tankers and squeeze on US oil output in Gulf of Mexico as storm Isaias approaches Here’s our wrap of the moves in markets: The sell-off in bond markets has put the euro under pressure, pushing to close to a 17-month low.",
+        "development": "据《卫报》市场直播，布伦特原油涨破每桶105美元。中东油轮遇袭，加上风暴伊萨亚斯逼近墨西哥湾、美国当地石油产出承压，共同加剧了供给担忧。"
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "据《卫报》市场直播，布伦特原油涨破每桶105美元。中东油轮遇袭，加上风暴伊萨亚斯逼近墨西哥湾、美国当地石油产出承压，共同加剧了供给担忧。",
+          "evidence": [
+            {
+              "article_id": "8d5b68a78606145d",
+              "quote": "Brent crude tops $105 a barrel amid attacks on tankers and squeeze on US oil output in Gulf of Mexico as storm Isaias approaches Here’s our wrap of the moves in markets: The sell-off in bond markets has put the euro under pressure, pushing to close to a 17-month low."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "欧洲天然气价格也升至两周高位，报道将这一上涨与霍尔木兹海峡的袭击联系起来。油气价格和市场报价仍在波动，以上为本期截稿时报道的水平。",
+          "evidence": [
+            {
+              "article_id": "8d5b68a78606145d",
+              "quote": "chancellor 5h ago Bond sell-off pushes euro to near 17-month low; gilt yields also rise 5h ago European gas prices rise to two-week highs on Hormuz attacks 5h ago Brent crude jumps $4 to $104 a barrel 6h ago Eurozone bond yields rise, as Brent crude heads towards $104 6h ago Deloitte fined £6.05m in UK over Go-Ahead audit 7h ago Tesco lifts profit forecast and says consumer confidence is resilient 7h ago Introduction: Oil prices climb amid supply fears and shipping attacks; prospect of rate rise weighs on UK housing market Vessels at the strait of Hormuz, as seen from Musandam, Oman."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "single_source",
+        "note": "单一报道来源。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "8d5b68a78606145d",
+          "name": "The Guardian Business",
+          "url": "https://www.theguardian.com/business/live/2026/oct/08/oil-prices-rise-shipping-attacks-rate-rise-uk-housing-market-bank-england-latest-live-updates",
+          "time": "2026-10-08T13:27:45+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "uk_ten_year_gilt_record",
+      "category": "economics",
+      "headline": "英国十年期国债收益率升至19年高位",
+      "article_ids": [
+        "a65d4925a9836fd5"
+      ],
+      "is_conflict": false,
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "freshness": {
+        "article_id": "a65d4925a9836fd5",
+        "quote": "The yield, or interest rate, on 10-year UK government bonds had jumped 0.06 percentage points by lunchtime in London, to 5.515%.",
+        "development": "英国十年期国债收益率周四升至5.515%，较此前上涨0.06个百分点，为2007年7月以来最高。投资者担忧通胀并抛售债券；债券价格下跌时，收益率会上升。"
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "英国十年期国债收益率周四升至5.515%，较此前上涨0.06个百分点，为2007年7月以来最高。投资者担忧通胀并抛售债券；债券价格下跌时，收益率会上升。",
+          "evidence": [
+            {
+              "article_id": "a65d4925a9836fd5",
+              "quote": "The yield, or interest rate, on 10-year UK government bonds had jumped 0.06 percentage points by lunchtime in London, to 5.515%."
+            },
+            {
+              "article_id": "a65d4925a9836fd5",
+              "quote": "Yields go up when bond prices go down."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "二十年和三十年期国债收益率也明显上涨，达到1998年以来高位。融资成本上升给财政大臣约翰·希利增加压力，他计划在10月28日提交首份预算。",
+          "evidence": [
+            {
+              "article_id": "a65d4925a9836fd5",
+              "quote": "Yields on 20- and 30-year UK government bonds, which are known as gilts, had also risen significantly, to their highest level since as long ago as 1998."
+            },
+            {
+              "article_id": "a65d4925a9836fd5",
+              "quote": "Recent dramatic moves in government bond markets have been driven by international factors, but will increase the pressure on John Healey ahead of his first budget as chancellor on 28 October."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "single_source",
+        "note": "单一报道来源。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "a65d4925a9836fd5",
+          "name": "The Guardian Business",
+          "url": "https://www.theguardian.com/business/2026/oct/08/medium-term-borrowing-costs-uk-government-19-year-high",
+          "time": "2026-10-08T12:47:49+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "asos_breach_scope_update",
+      "category": "business",
+      "headline": "Asos更新数据泄露范围：购物搜索记录也被窃取",
+      "article_ids": [
+        "4c7f77b9543c9607",
+        "7ad84d0adb1e3fda"
+      ],
+      "is_conflict": false,
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "freshness": {
+        "article_id": "4c7f77b9543c9607",
+        "quote": "After carrying out a “detailed, 48-hour investigation” into the incident, Asos confirmed on Thursday that basic personal information had been accessed by an unidentified third party.",
+        "development": "英国电商Asos确认，本周泄露的数据不只有姓名和联系方式，还包括客户近期购物搜索记录。公司称银行卡信息和密码未被访问；BBC收到攻击者提供的数据样本后，向Asos核实了泄露范围。"
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "英国电商Asos确认，本周泄露的数据不只有姓名和联系方式，还包括客户近期购物搜索记录。公司称银行卡信息和密码未被访问；BBC收到攻击者提供的数据样本后，向Asos核实了泄露范围。",
+          "evidence": [
+            {
+              "article_id": "4c7f77b9543c9607",
+              "quote": "Asos says hacker accessed customers’ names, contact details and search histories."
+            },
+            {
+              "article_id": "4c7f77b9543c9607",
+              "quote": "Payment card details and passwords had not been accessed, the retailer added."
+            },
+            {
+              "article_id": "7ad84d0adb1e3fda",
+              "quote": "On Wednesday evening the cyber criminals responsible contacted the BBC sharing a sample of the stolen data which showed the true extent of the hack."
+            },
+            {
+              "article_id": "7ad84d0adb1e3fda",
+              "quote": "In its email to customers, Asos confirmed data profiles were taken but said no bank details or passwords were accessed."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "Asos称攻击者冒充可信联系人取得员工登录凭据，再访问第三方平台。公司已封锁受影响平台并展开调查，同时提醒客户警惕冒充Asos的短信、邮件和电话。",
+          "evidence": [
+            {
+              "article_id": "4c7f77b9543c9607",
+              "quote": "Hackers gained access to a database of one of Asos’s third-party service providers by impersonating a “trusted contact” to gain access to one of its employee’s accounts, the retailer said."
+            },
+            {
+              "article_id": "4c7f77b9543c9607",
+              "quote": "“The affected platforms were immediately locked down, ensuring that no further information could be accessed, and a full investigation was launched with the support of both internal and external cyber experts."
+            },
+            {
+              "article_id": "4c7f77b9543c9607",
+              "quote": "However, the company warned: “Please remain cautious of unexpected messages or calls claiming to be from Asos."
+            },
+            {
+              "article_id": "7ad84d0adb1e3fda",
+              "quote": "The UK fashion site explained to customers that hackers gained access to an Asos employee account by \"impersonating a trusted contact to obtain log in credentials\"."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "not_independent",
+        "note": "对照多家报道；共同引用的官方或公司说法未作为独立事实确认。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "4c7f77b9543c9607",
+          "name": "The Guardian Business",
+          "url": "https://www.theguardian.com/business/2026/oct/08/asos-customer-data-accessed-hacker-posing-impersonated",
+          "time": "2026-10-08T11:44:22+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        },
+        {
+          "id": "7ad84d0adb1e3fda",
+          "name": "BBC Business",
+          "url": "https://www.bbc.co.uk/news/articles/c3zxjdw5ywgpo?at_medium=RSS&at_campaign=rss",
+          "time": "2026-10-08T09:29:53.614000+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "japan_brewer_antitrust_investigation",
+      "category": "business",
+      "headline": "日本四大啤酒商遭反垄断调查，涉嫌协调涨价",
+      "article_ids": [
+        "7cf91f15f166b68c"
+      ],
+      "is_conflict": false,
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "freshness": {
+        "article_id": "7cf91f15f166b68c",
+        "quote": "The commission’s secretary general, Hiroo Iwanari, confirmed an investigation had begun, but declined to give details.",
+        "development": "日本公平交易委员会搜查朝日、麒麟、三得利及札幌啤酒的办公室，调查它们是否串通制定啤酒及其他饮料价格。四家公司合计占日本国内啤酒市场九成以上，目前仍属调查和涉嫌阶段。"
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "日本公平交易委员会搜查朝日、麒麟、三得利及札幌啤酒的办公室，调查它们是否串通制定啤酒及其他饮料价格。四家公司合计占日本国内啤酒市场九成以上，目前仍属调查和涉嫌阶段。",
+          "evidence": [
+            {
+              "article_id": "7cf91f15f166b68c",
+              "quote": "Officials from the Fair Trade Commission this week searched the offices of Asahi Breweries, Kirin Brewery, Suntory Beer and Sapporo Breweries – which together control more than 90% of the domestic market."
+            },
+            {
+              "article_id": "7cf91f15f166b68c",
+              "quote": "Investigators probe Asahi, Kirin, Suntory and Sapporo breweries – which together control more than 90% of Japan’s beer market Japanese authorities have raided the country’s four biggest breweries over suspicions they colluded to set the price of beer and other beverages – a practice media reports said could have forced drinkers to pay over the odds."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "委员会秘书长证实调查已启动，四家公司表示会配合。日本媒体称，调查涉及销售主管等人员是否长期秘密会面，协调涨价的时间和幅度。",
+          "evidence": [
+            {
+              "article_id": "7cf91f15f166b68c",
+              "quote": "The commission’s secretary general, Hiroo Iwanari, confirmed an investigation had begun, but declined to give details."
+            },
+            {
+              "article_id": "7cf91f15f166b68c",
+              "quote": "The companies said they would cooperate with authorities."
+            },
+            {
+              "article_id": "7cf91f15f166b68c",
+              "quote": "Japanese media quoted sources as saying that sales managers and other executives from the breweries were suspected of meeting secretly over a prolonged period to coordinate on the timing and scale of retail price increases, which ranged from several yen to several dozen yen a time."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "single_source",
+        "note": "单一报道来源。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "7cf91f15f166b68c",
+          "name": "The Guardian",
+          "url": "https://www.theguardian.com/world/2026/oct/08/japan-beer-giants-raided-over-suspicions-they-colluded-to-set-the-price-of-beverages",
+          "time": "2026-10-08T03:54:38+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "jaguar_type01_launch",
+      "category": "business",
+      "headline": "捷豹发布Type 01电动车，押注高端纯电转型",
+      "article_ids": [
+        "99fe1a4d7477a307",
+        "4e59bdd9bfb5054a"
+      ],
+      "is_conflict": false,
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "freshness": {
+        "article_id": "99fe1a4d7477a307",
+        "quote": "And just when it all starts to feel a little overwhelming, Jaguar goes and unveils a new car.",
+        "development": "捷豹发布全新Type 01电动车，作为品牌转型后的首款车型。BBC报道，英国起售价为13万英镑，美国为130,500美元；车型将由英国索利哈尔工厂组装，电池包在伍尔弗汉普顿生产。"
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "捷豹发布全新Type 01电动车，作为品牌转型后的首款车型。BBC报道，英国起售价为13万英镑，美国为130,500美元；车型将由英国索利哈尔工厂组装，电池包在伍尔弗汉普顿生产。",
+          "evidence": [
+            {
+              "article_id": "99fe1a4d7477a307",
+              "quote": "And just when it all starts to feel a little overwhelming, Jaguar goes and unveils a new car."
+            },
+            {
+              "article_id": "99fe1a4d7477a307",
+              "quote": "The Type 01 is the first model to arrive from Jaguar’s rebirth."
+            },
+            {
+              "article_id": "4e59bdd9bfb5054a",
+              "quote": "The minimum cost of Jaguar's Type 01 is £130,000 in the UK and $130,500 in the US."
+            },
+            {
+              "article_id": "4e59bdd9bfb5054a",
+              "quote": "The vehicles will be assembled at Lode Lane in Solihull, while their battery packs are being made at the Wolverhampton plant."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "母公司捷豹路虎此前宣布裁员4,000人，面临中国竞争、美国关税及电动化转型压力。行业专家称这款车对就业和投资至关重要。",
+          "evidence": [
+            {
+              "article_id": "4e59bdd9bfb5054a",
+              "quote": "Last month, it emerged Jaguar Land Rover, which has manufacturing sites in Solihull, Wolverhampton and Halewood on Merseyside, is to cut 4,000 jobs as it struggles with Chinese competition, US tariffs and the transition to electric."
+            },
+            {
+              "article_id": "4e59bdd9bfb5054a",
+              "quote": "Prof David Bailey says there is a lot riding on the Type 01 in terms of jobs and investment."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "not_independent",
+        "note": "对照多家报道；共同引用的官方或公司说法未作为独立事实确认。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "99fe1a4d7477a307",
+          "name": "Ars Technica",
+          "url": "https://arstechnica.com/cars/2026/10/jaguar-makes-its-controversial-all-ev-return-with-the-type-01/",
+          "time": "2026-10-07T15:48:01+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        },
+        {
+          "id": "4e59bdd9bfb5054a",
+          "name": "BBC Business",
+          "url": "https://www.bbc.co.uk/news/articles/cwvgrx5ner6go?at_medium=RSS&at_campaign=rss",
+          "time": "2026-10-08T05:08:56.215000+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "microsoft_surface_ultra_announcement",
+      "category": "technology",
+      "headline": "微软发布Surface Laptop Ultra，面向本地AI开发",
+      "article_ids": [
+        "f0cfa9e453a6d035"
+      ],
+      "is_conflict": false,
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "freshness": {
+        "article_id": "f0cfa9e453a6d035",
+        "quote": "In its first live event in two years, Microsoft today announced its newest Surface laptop, outlined a host of changes coming to Windows 11, and shared a vision of how local-AI and agentic workflows could reshape personal computing for those in the dev community as well as home enthusiasts.",
+        "development": "微软在发布会上推出Surface Laptop Ultra，采用英伟达RTX Spark芯片，起售价2,599美元，最高配备128GB统一内存。新品已开放预订，计划10月16日开始发货。"
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "微软在发布会上推出Surface Laptop Ultra，采用英伟达RTX Spark芯片，起售价2,599美元，最高配备128GB统一内存。新品已开放预订，计划10月16日开始发货。",
+          "evidence": [
+            {
+              "article_id": "f0cfa9e453a6d035",
+              "quote": "The device has a starting price of $2,599, and comes in various SoC and memory configurations, with either a 5120-core or 6144-core Blackwell GPU and up to 128GB of LPDDR5x unified memory."
+            },
+            {
+              "article_id": "f0cfa9e453a6d035",
+              "quote": "It will begin shipping on October 16 and is available for pre-order now."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "这款设备主要面向开发者，强调在本机进行AI开发和部署。统一内存可在不同计算任务之间分配；微软同时介绍了Windows 11的新变化。",
+          "evidence": [
+            {
+              "article_id": "f0cfa9e453a6d035",
+              "quote": "While the new Ultra is clearly focused on the developer crowd, graphical performance was highlighted during the presentation to show off just how capable the laptop can be."
+            },
+            {
+              "article_id": "f0cfa9e453a6d035",
+              "quote": "By leaning on unified memory allocation rather than the physical VRAM limits of a traditional GPU, the laptop can assign its resources to handle modern gaming tasks as well as local AI development and deployment."
+            },
+            {
+              "article_id": "f0cfa9e453a6d035",
+              "quote": "In its first live event in two years, Microsoft today announced its newest Surface laptop, outlined a host of changes coming to Windows 11, and shared a vision of how local-AI and agentic workflows could reshape personal computing for those in the dev community as well as home enthusiasts."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "single_source",
+        "note": "单一报道来源。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "f0cfa9e453a6d035",
+          "name": "Ars Technica",
+          "url": "https://arstechnica.com/gadgets/2026/10/microsoft-event-debuts-new-ai-friendly-hardware-and-windows-changes/",
+          "time": "2026-10-08T00:00:24+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    },
+    {
+      "event_key": "google_maps_uk_live_fuel_prices",
+      "category": "technology",
+      "headline": "Google地图在英国上线实时油价查询",
+      "article_ids": [
+        "97fea96fe6160ed4"
+      ],
+      "is_conflict": false,
+      "scores": {
+        "consequence": 4,
+        "timeliness": 4,
+        "credibility": 4,
+        "global_relevance": 4
+      },
+      "freshness": {
+        "article_id": "97fea96fe6160ed4",
+        "quote": "Move expected to make pump pricing more transparent and encourage competition after diesel hits record £2 a litre Drivers will be able to see live petrol prices on Google Maps for the first time from Thursday, in a move that will help motorists shop around for the cheapest fuel.",
+        "development": "Google地图周四开始向英国用户显示实时汽油和柴油价格。数据来自英国政府Fuel Finder平台，该平台覆盖99%的加油站，用户可在地图中比较附近站点报价。"
+      },
+      "claims": [
+        {
+          "kind": "fact",
+          "text": "Google地图周四开始向英国用户显示实时汽油和柴油价格。数据来自英国政府Fuel Finder平台，该平台覆盖99%的加油站，用户可在地图中比较附近站点报价。",
+          "evidence": [
+            {
+              "article_id": "97fea96fe6160ed4",
+              "quote": "Move expected to make pump pricing more transparent and encourage competition after diesel hits record £2 a litre Drivers will be able to see live petrol prices on Google Maps for the first time from Thursday, in a move that will help motorists shop around for the cheapest fuel."
+            },
+            {
+              "article_id": "97fea96fe6160ed4",
+              "quote": "UK motorists can now see live fuel prices on Google Maps | Petrol prices | The Guardian Skip to main content Skip to navigation Print subscriptions Newsletters Sign in Google will use data from the government’s Fuel Finder platform, which displays real-time prices at 99% of forecourts, to show Google Map users the cheapest in their local area."
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "英国柴油均价近期达到每升2英镑的纪录水平。英国汽车协会认为，更透明的报价有助于驾驶者寻找便宜油站并促进竞争。",
+          "evidence": [
+            {
+              "article_id": "97fea96fe6160ed4",
+              "quote": "Move expected to make pump pricing more transparent and encourage competition after diesel hits record £2 a litre Drivers will be able to see live petrol prices on Google Maps for the first time from Thursday, in a move that will help motorists shop around for the cheapest fuel."
+            },
+            {
+              "article_id": "97fea96fe6160ed4",
+              "quote": "Hopefully, this high-level pump-price transparency will also encourage more competitive prices from retailers."
+            }
+          ]
+        }
+      ],
+      "cross_check": {
+        "status": "single_source",
+        "note": "单一报道来源。"
+      },
+      "rank_score": 4.0,
+      "sources": [
+        {
+          "id": "97fea96fe6160ed4",
+          "name": "The Guardian Business",
+          "url": "https://www.theguardian.com/money/2026/oct/08/uk-drivers-live-petrol-diesel-prices-google-maps-pump-pricing",
+          "time": "2026-10-08T05:00:11+00:00",
+          "discovered": null,
+          "time_type": "rss"
+        }
+      ]
+    }
+  ],
+  "editorial_mode": "manual_source_review",
+  "review": {
+    "approved": true,
+    "issues": []
+  },
+  "weather": {
+    "status": "ok",
+    "location": "汉诺威，新罕布什尔州",
+    "date": "2026-10-08",
+    "day_label": "今日",
+    "temperature_c": 13.4,
+    "low_c": 7.5,
+    "high_c": 18.7,
+    "precipitation_probability_percent": 31,
+    "current_time": "2026-10-08T09:45:00-04:00",
+    "retrieved_at": "2026-10-08T13:46:26.562431+00:00",
+    "source": "Open-Meteo",
+    "source_url": "https://open-meteo.com/",
+    "probability_definition": "maximum_hourly_precipitation_probability"
+  }
+}

@@ -1,0 +1,65 @@
+name: Send reviewed news sample
+on:
+  workflow_dispatch:
+    inputs:
+      sample_date:
+        description: Date of the source-reviewed sample (YYYY-MM-DD)
+        type: string
+        required: true
+      test_id:
+        description: Stable test identity; reuse prevents duplicate sends
+        type: string
+        required: true
+permissions:
+  contents: write
+concurrency:
+  group: daily-news-delivery
+  cancel-in-progress: false
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      NEWS_SENDER: ${{ secrets.NEWS_SENDER }}
+      NEWS_RECIPIENT: ${{ secrets.NEWS_RECIPIENT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.lock && python -m pip install --no-deps -e .
+      - name: Initialize durable delivery ledger
+        run: python scripts/state_branch.py init
+      - name: Validate reviewed sample and current-day sources
+        env:
+          SAMPLE_DATE: ${{ inputs.sample_date }}
+        run: |
+          python - <<'PY'
+          import os, re, shutil
+          from pathlib import Path
+          import yaml
+          from news_agent.config import load
+          date = os.environ['SAMPLE_DATE']
+          if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', date):
+              raise SystemExit('Invalid sample date')
+          source = Path('samples') / date
+          Path('output').mkdir(exist_ok=True)
+          for name in ('articles.json', 'edition.json'):
+              shutil.copyfile(source / name, Path('output') / name)
+          config = load('config.yaml')
+          config['newsletter']['state_dir'] = '.news-state'
+          Path('runtime-config.yaml').write_text(yaml.safe_dump(config, allow_unicode=True))
+          PY
+      - name: Send reviewed sample with GitHub mail secrets
+        env:
+          TEST_ID: ${{ inputs.test_id }}
+        run: python -m news_agent --config runtime-config.yaml send-test --test-id "$TEST_ID"
+      - name: Upload readable sample
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reviewed-news-${{ github.run_id }}
+          path: |
+            output/briefing.html
+            output/briefing.txt
