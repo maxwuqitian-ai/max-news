@@ -7,7 +7,7 @@ import sys
 import time
 from zoneinfo import ZoneInfo
 from . import config as configuration
-from .collect import Article, collect
+from .collect import Article, collect, timestamp
 from .delivery import atomic_json, deliver, already_attempted, DeliveryError
 from .editorial import EditorialError, generate, validate
 from .render import write
@@ -55,10 +55,23 @@ def read_artifacts(root, config, expected_date):
     return validate(edition, articles, config, expected_date)
 
 
+def read_snapshot(root, config, now):
+    """Retry generation from recent retrieved evidence without changing its cutoff."""
+    report = json.loads((root / 'collection-report.json').read_text())
+    as_of = timestamp(report['retrieved_at'])
+    age = (now - as_of).total_seconds()
+    zone = ZoneInfo(config['newsletter']['timezone'])
+    if (not 0 <= age <= config['newsletter']['max_edition_age_hours'] * 3600
+            or as_of.astimezone(zone).date() != now.astimezone(zone).date()):
+        raise EditorialError('Source snapshot is outside the current-day freshness window')
+    articles = [Article(**a) for a in json.loads((root / 'articles.json').read_text())]
+    return articles, as_of
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Source-grounded Chinese daily news briefing')
     parser.add_argument('--config', default='config.yaml')
-    parser.add_argument('command', choices=['collect', 'preview', 'send-test', 'run', 'due'])
+    parser.add_argument('command', choices=['collect', 'preview', 'revalidate', 'send-test', 'run', 'due'])
     parser.add_argument('--test-id', help='Unique manual test identity; reuse prevents duplicate tests')
     args = parser.parse_args(argv)
     logging.getLogger('httpx').setLevel(logging.WARNING)
@@ -85,6 +98,10 @@ def main(argv=None):
         if args.command == 'send-test':
             if not args.test_id: parser.error('send-test requires --test-id')
             edition = read_artifacts(root, config, edition_date)
+        elif args.command == 'revalidate':
+            articles, as_of = read_snapshot(root, config, now)
+            edition = generate(config, articles, edition_date, as_of=as_of)
+            atomic_json(root / 'edition.json', edition)
         else:
             articles, failures = collect(config, now)
             if args.command in ('run','preview'):

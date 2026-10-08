@@ -17,8 +17,13 @@ on:
         type: string
         description: Stable test identity (required for send-test; reuse prevents duplicate emails)
         required: false
+      source_run_id:
+        type: string
+        description: Optional recent same-day source run to revalidate; original cutoff retained, never used for daily scheduling
+        required: false
 permissions:
   contents: write # only used for the durable news-agent-state branch
+  actions: read # optional same-repository source artifacts for manual repair tests
 concurrency:
   group: daily-news-delivery
   cancel-in-progress: false
@@ -61,14 +66,18 @@ jobs:
         env:
           EVENT: ${{ github.event_name }}
           MODE: ${{ inputs.mode }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
         run: |
           python - <<'PY'
-          import os
+          import os, re
           from hashlib import sha256
           from news_agent.config import load
           from news_agent.cli import preparation_due
           manual = os.environ['EVENT'] == 'workflow_dispatch'
           mode = os.environ.get('MODE') if manual else 'daily'
+          source_run = os.environ.get('SOURCE_RUN_ID', '')
+          if source_run and (not manual or mode not in ('preview', 'send-test') or not re.fullmatch(r'[1-9][0-9]*', source_run)):
+              raise SystemExit('Source snapshot reuse is only allowed for manual preview/send-test with a numeric run ID')
           config = load('config.yaml')
           enabled = manual and mode in ('preview', 'send-test') or preparation_due(config)
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
@@ -133,9 +142,22 @@ jobs:
           path: output/.model-cache
           key: news-responses-${{ runner.os }}-${{ github.run_id }}
           restore-keys: news-responses-${{ runner.os }}-
+      - name: Restore recent source snapshot for manual revalidation
+        if: steps.gate.outputs.enabled == 'true' && inputs.source_run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.source_run_id }}
+          name: briefing-${{ inputs.source_run_id }}
+          path: output
       - name: Collect and review preview
         if: steps.gate.outputs.enabled == 'true' && steps.gate.outputs.mode != 'daily'
-        run: python -m news_agent --config runtime-config.yaml preview
+        env:
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          generation_command=preview
+          if [ -n "$SOURCE_RUN_ID" ]; then generation_command=revalidate; fi
+          python -m news_agent --config runtime-config.yaml "$generation_command"
       - name: Send manual test
         if: steps.gate.outputs.enabled == 'true' && steps.gate.outputs.mode == 'send-test'
         env:
