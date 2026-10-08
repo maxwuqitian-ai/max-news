@@ -1,0 +1,45 @@
+name: Check Chinese publisher feeds
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sources:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.lock
+      - name: Check official publisher RSS feeds
+        run: |
+          python - <<'PY'
+          import concurrent.futures, json
+          from pathlib import Path
+          import httpx, feedparser
+          root=Path('source-check');root.mkdir(exist_ok=True)
+          urls=['https://feeds.bbci.co.uk/zhongwen/simp/rss.xml', 'https://www.ftchinese.com/rss/news',
+                'https://cn.nytimes.com/rss/', 'https://rss.dw.com/rdf/rss-chi-all',
+                'https://www.rfi.fr/cn/rss', 'https://www.zaobao.com.sg/realtime/world/rss.xml']
+          def check(url):
+              try:
+                  response=httpx.get(url,follow_redirects=True,timeout=30)
+                  feed=feedparser.parse(response.content)
+                  if response.status_code==200 and feed.entries:
+                      (root/(url.split('/')[2]+'.xml')).write_bytes(response.content)
+                  return {'url':url,'status':response.status_code,'count':len(feed.entries),
+                          'entries':[{'title':e.get('title'), 'link':e.get('link'),
+                                      'published':e.get('published') or e.get('updated'),
+                                      'summary':e.get('summary','')[:1000]} for e in feed.entries]}
+              except Exception as exc:return {'url':url,'error':type(exc).__name__}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+              results=list(pool.map(check,urls))
+          (root/'report.json').write_text(json.dumps(results,ensure_ascii=False,indent=2))
+          for r in results:print({k:v for k,v in r.items() if k!='entries'})
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chinese-source-check
+          path: source-check
+          retention-days: 3
