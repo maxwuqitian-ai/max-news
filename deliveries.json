@@ -1,9 +1,10 @@
 {
   "test:launch-validation-2026-10-08:9f8e6d8e5c2447cc": {
-    "status": "uncertain",
+    "status": "failed",
     "provider": "resend",
     "date": "2026-10-08",
     "attempted_at": "2026-10-08T13:46:27.246742+00:00",
-    "error_type": "HTTPStatusError"
+    "error_type": "HTTPStatusError",
+    "reconciliation": "The unchanged Codex credential is rejected by Resend with HTTP 400: API key is invalid. It cannot authorize email sending. No provider message ID was issued. Original attempt preserved; next manual test uses the separate GitHub secret."
   }
 }
