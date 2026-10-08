@@ -1,6 +1,8 @@
 """Classify small source batches; let Python own identity, grouping and ranking."""
 import logging
 import re
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from math import floor
 from .editorial import EditorialError
 
@@ -12,11 +14,28 @@ GENRES = ['breaking_news', 'explainer', 'recap', 'opinion', 'profile']
 def primary_category(title, predicted):
     """Resolve unambiguous primary events, rather than secondary AI/weather effects."""
     text = title.casefold()
+    if (re.search(r'武器|[导導][弹彈]|[飞飛][弹彈]|\b(?:missile|weapon)\b',text)
+            and re.search(r'[试試]射|\btests?\b',text)):
+        return 'politics'
+    if (re.search(r'[欧歐]股|股市|\b(?:stock markets?|wall street|european stocks)\b',text)
+            and re.search(r'收黑|[开開]低|走低|下跌|\b(?:falls?|drops?|slumps?|lower)\b',text)):
+        return 'economics'
     if re.search(r'\b(profits?|earnings|acquisition|buyout|merger)\b', text) and not re.search(r'\b(industrial|economy-wide|sector-wide)\b', text):
         return 'business'
     if re.search(r'\b(hurricane|typhoon|earthquake|tsunami)\b', text) and re.search(r'\b(strengthens|forms|hits|strikes|landfall)\b', text):
         return 'world'
     return predicted
+
+
+def oil_market_event(article,timezone):
+    """Consolidate the same day's regional stock declines linked to rising oil."""
+    title=article['title'].casefold();text=title+' '+article.get('excerpt','').casefold()
+    if not article.get('published_at') or primary_category(title,'unknown')!='economics':
+        return None
+    if not re.search(r'油[价價](?:今天|今日)?(?:大|急|暴|[飙飆])?(?:升|[涨漲])|(?:rising|surging|higher)\s+(?:crude\s+)?oil|oil(?:\s+prices?)?\s+(?:rises?|rose|jumps?|surges?)',text):
+        return None
+    day=datetime.fromisoformat(article['published_at'].replace('Z','+00:00')).astimezone(ZoneInfo(timezone)).date()
+    return 'global_markets_rising_oil_'+day.isoformat().replace('-','_')
 
 def obj(properties):
     return {'type': 'object', 'properties': properties, 'required': list(properties), 'additionalProperties': False}
@@ -106,7 +125,9 @@ def select(catalog, ratings, config, *, excluded=frozenset(),eligible_primary=No
         aid = article['id']; r = ratings[aid]
         if aid in excluded or r['category'] not in NEWS_CATEGORIES or r['genre'] != 'breaking_news':
             continue
-        group = groups.setdefault(r['event_key'], [])
+        r=dict(r,category=primary_category(article['title'],r['category']))
+        key=oil_market_event(article,n['timezone']) or r['event_key']
+        group = groups.setdefault(key, [])
         group.append((article, r))
     candidates = []
     for key, reports in groups.items():

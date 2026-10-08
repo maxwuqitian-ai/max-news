@@ -64,6 +64,18 @@ clauses omitted from the shorter RSS lead. Compare displayed wording to that ori
 mistake an authentic publisher headline for a fabricated assistant assertion just because its RSS excerpt
 focuses on the main development. Reject actual contradictions or misleading changes in certainty/attribution.'''
 
+EDITION_AUDIT_SYSTEM += '''
+headline_evidence gives the exact original captured publisher quote verified against retrieved evidence.
+It includes the publisher headline itself. A count of a subgroup in that source headline and the overall
+total in its abbreviated lead are complementary, not contradictory. Do not require the lead to repeat
+every title detail or enumerate names not asserted by the briefing. Compare numbers only for the same
+population and time. Actual contradictions or altered attribution remain grounds for rejection.'''
+
+EDITION_AUDIT_SYSTEM += '''
+Apply the same primary-topic rules as selection: military weapon tests are politics; stock-index/market
+price moves are economics even when their reported trigger concerns war or government actions.
+An event_key is an internal grouping label, not an additional assertion displayed to the reader.'''
+
 def object_schema(properties):
     return {'type': 'object', 'properties': properties, 'required': list(properties), 'additionalProperties': False}
 
@@ -269,7 +281,7 @@ def generate_local(config, articles, date, model, as_of):
             'genre_definitions': {'breaking_news': 'factual report of a substantive new announcement, decision, transaction, data release or verified change',
                 'explainer': 'background analysis without a substantive new development', 'recap': 'old news retold',
                 'opinion': 'commentary/reviews/letters', 'profile': 'background without substantive new developments'},
-            'category_definitions': {'politics': 'government, elections and diplomacy', 'economics': 'economic data, markets and trade',
+            'category_definitions': {'politics': 'government, elections, diplomacy and military weapon tests', 'economics': 'economic data, markets and trade; stock-index/market-price moves remain economics even when triggered by political or war reports',
                 'business': 'company earnings, acquisitions and operations', 'technology': 'technology/products/research',
                 'world': 'public health and disasters', 'sports': 'fixtures, athletes, competitions and retirements',
                 'entertainment': 'celebrity and films', 'personal_interest': 'minor local crime, lifestyle and human-interest features'},
@@ -342,6 +354,8 @@ def generate_local(config, articles, date, model, as_of):
         'edition_date':date, 'as_of':as_of.isoformat(),
         'response_schema': REVIEW_SCHEMA,
         'stories': [{'event_key': s['event_key'], 'headline': s['headline'], 'category': s['category'],
+                     'headline_evidence':[{'publisher':by_id[ref['article_id']].publisher,
+                        'quote':ref['quote']} for ref in s['claims'][0]['evidence']] if excerpt_mode else [],
                      'paragraphs': [c['text'] for c in s['claims'] if c.get('placement')!='headline'],
                      'source_names':[source['name'] for source in s['sources']],
                      'original_reporting':[{'publisher':by_id[aid].publisher,'headline':by_id[aid].title,

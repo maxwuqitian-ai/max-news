@@ -263,6 +263,21 @@ def test_company_earnings_and_weather_use_primary_topic():
     assert primary_category('AI chip demand pushes company profits to a record', 'technology') == 'business'
     assert primary_category('Isaias strengthens into the first hurricane', 'economics') == 'world'
     assert primary_category('Industrial profits rise across China', 'economics') == 'economics'
+    assert primary_category('南韓自主研發極音速滑翔載具武器 首次試射成功','technology')=='politics'
+    assert primary_category('傳美國考慮對伊朗發動新一波攻擊 歐股收黑','politics')=='economics'
+
+
+def test_regional_oil_driven_market_moves_group_by_new_york_day():
+    from news_agent.selection import oil_market_event
+    europe={'title':'傳美國考慮對伊朗發動新一波攻擊 歐股收黑',
+        'excerpt':'這是合成測試，國際油價今天大漲，歐洲股市收黑。','published_at':'2026-01-15T21:00:00+00:00'}
+    us={'title':'國際油價升、美債殖利率徘徊高點 華爾街股市開低',
+        'excerpt':'這是合成測試，油價飆升，股市開低。','published_at':'2026-01-15T14:00:00+00:00'}
+    assert oil_market_event(europe,'America/New_York')==oil_market_event(us,'America/New_York')
+    later=dict(us,published_at='2026-01-16T14:00:00+00:00')
+    assert oil_market_event(later,'America/New_York')!=oil_market_event(us,'America/New_York')
+    unrelated=dict(us,title='國際油價走低、債券殖利率上升 股市收黑',excerpt='油價走低，債券殖利率上升。')
+    assert oil_market_event(unrelated,'America/New_York') is None
 
 
 @pytest.mark.parametrize('corrected_review_passes', [True, False])
