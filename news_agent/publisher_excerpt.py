@@ -83,6 +83,8 @@ def verify_story(story,articles):
         else:
             if not article.publisher_excerpt or not article.publisher_excerpt.startswith(quote):
                 raise EditorialError('Summary must preserve the original publisher excerpt')
+            if short_excerpt(article.publisher_excerpt,len(quote))!=quote:
+                raise EditorialError('Publisher summary must retain complete sentences')
             expected=simplified(f'据{article.publisher}报道：'+quote)
             if claim.get('placement')=='headline': raise EditorialError('Publisher summary cannot be hidden')
         if claim.get('text')!=expected: raise EditorialError('Publisher excerpt was rewritten')

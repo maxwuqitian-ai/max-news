@@ -21,6 +21,15 @@ def test_publisher_truncation_keeps_only_complete_sentences():
         short_excerpt('三星传出调降产量，主因是手机事业的成本压 […]',180)
     assert short_excerpt('合成测试：三星表示计划降低手机产量。尚未披露完整的成本压 […]',180)=='合成测试：三星表示计划降低手机产量。'
 
+def test_incomplete_source_prefix_cannot_pass_delivery_verification():
+    from news_agent.publisher_excerpt import simplified
+    article,event=fixture();story=compile_story(event,[article])
+    quote=article.publisher_excerpt[:20]
+    story['claims'][1]['evidence'][0]['quote']=quote
+    story['claims'][1]['text']=simplified(f'据{article.publisher}报道：'+quote)
+    with pytest.raises(EditorialError,match='complete publisher sentence'):
+        verify_story(story,[article])
+
 def test_source_preserving_briefing_has_simplified_chinese_and_verbatim_provenance(config):
     article,event=fixture();story=compile_story(event,[article])
     config['editorial']['mode']='publisher_chinese_excerpt'
