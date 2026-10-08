@@ -357,7 +357,9 @@ def balance_verified_stories(stories, config):
             matching = [s for s in stories if predicate(s)]
             if len(matching) > len(stories) * limit: over.extend(matching)
         if not over: break
-        weakest = min(over, key=lambda s: s['rank_score'])
+        weakest = min(over, key=lambda s: s['rank_score'] if 'rank_score' in s else
+            sum(s['scores'][key]*weight for key,weight in
+                [('consequence',.4),('timeliness',.2),('credibility',.2),('global_relevance',.2)]))
         stories.remove(weakest)
     return stories
 

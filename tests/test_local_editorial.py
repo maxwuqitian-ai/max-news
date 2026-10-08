@@ -290,6 +290,17 @@ def test_omitting_a_rejected_story_does_not_waive_topic_limits(config):
     assert sum(s['category']=='politics' for s in balanced) <= len(balanced)*.4
     assert 'event-5' not in {s['event_key'] for s in balanced}
 
+def test_rebalance_publisher_excerpts_before_rank_score_exists(config):
+    from news_agent.local_editorial import balance_verified_stories
+    config['newsletter']['min_stories']=6
+    stories=[{'event_key':f'event-{i}','category':'politics' if i<3 else 'business',
+        'is_conflict':False,'scores':dict(consequence=1 if i==2 else 4,
+            timeliness=4,credibility=4,global_relevance=4)} for i in range(7)]
+    result=balance_verified_stories(stories,config)
+    assert len(result)==6
+    assert 'event-2' not in {s['event_key'] for s in result}
+    assert sum(s['category']=='politics' for s in result)<=len(result)*.4
+
 
 def test_writer_requires_main_claim_support_from_each_provided_report(artifacts):
     from news_agent.local_editorial import evidence_passages, resolve_story, story_schema

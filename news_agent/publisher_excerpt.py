@@ -21,7 +21,11 @@ def eligible(article, *, exclude_opinion=True):
 def short_excerpt(text, limit):
     result=''
     # Latin dots in decimal numbers and abbreviations are not Chinese sentence boundaries.
-    for sentence in re.findall(r'[^。！？]+[。！？]?[”’」』]*',text):
+    truncated = bool(re.search(r'(?:\[(?:…+|\.{3})\]|…+|\.{3})\s*$', text))
+    # RSS publishers sometimes cut a word mid-sentence before […]/ellipsis.
+    # Keep only terminated sentences in that case; never publish the fragment.
+    pattern = r'[^。！？]+[。！？][”’」』]*' if truncated else r'[^。！？]+[。！？]?[”’」』]*'
+    for sentence in re.findall(pattern,text):
         if len(result+sentence)>limit: break
         result+=sentence
     if len(result.strip())<15: raise EditorialError('No complete publisher sentence within the excerpt limit')

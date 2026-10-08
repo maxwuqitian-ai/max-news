@@ -16,6 +16,11 @@ def fixture():
            'scores':{'consequence':4,'timeliness':4,'credibility':4,'global_relevance':4}}
     return article,event
 
+def test_publisher_truncation_keeps_only_complete_sentences():
+    with pytest.raises(EditorialError,match='complete publisher sentence'):
+        short_excerpt('三星传出调降产量，主因是手机事业的成本压 […]',180)
+    assert short_excerpt('合成测试：三星表示计划降低手机产量。尚未披露完整的成本压 […]',180)=='合成测试：三星表示计划降低手机产量。'
+
 def test_source_preserving_briefing_has_simplified_chinese_and_verbatim_provenance(config):
     article,event=fixture();story=compile_story(event,[article])
     config['editorial']['mode']='publisher_chinese_excerpt'
