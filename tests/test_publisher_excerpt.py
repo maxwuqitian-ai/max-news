@@ -21,6 +21,12 @@ def test_publisher_truncation_keeps_only_complete_sentences():
         short_excerpt('三星传出调降产量，主因是手机事业的成本压 […]',180)
     assert short_excerpt('合成测试：三星表示计划降低手机产量。尚未披露完整的成本压 […]',180)=='合成测试：三星表示计划降低手机产量。'
 
+def test_incomplete_publisher_primary_is_excluded_before_selection():
+    article,_=fixture()
+    article.publisher_excerpt='这是一段足够长的合成测试文字，但来源在句子结束前被截断，成本压 […]'
+    article.evidence=article.title+'. '+article.publisher_excerpt
+    assert not eligible(article)
+
 def test_incomplete_source_prefix_cannot_pass_delivery_verification():
     from news_agent.publisher_excerpt import simplified
     article,event=fixture();story=compile_story(event,[article])

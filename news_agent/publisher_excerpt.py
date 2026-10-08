@@ -18,8 +18,19 @@ def eligible(article, *, exclude_opinion=True):
     if exclude_opinion and opinion_url(article.url):
         return False
     text = article.publisher_excerpt
-    return bool(text and len(re.findall(r'[\u4e00-\u9fff]',article.title))>=4
-                and len(re.findall(r'[\u4e00-\u9fff]',text))>=20 and text[:100] in article.evidence)
+    if not (text and len(re.findall(r'[\u4e00-\u9fff]',article.title))>=4
+            and len(re.findall(r'[\u4e00-\u9fff]',text))>=20 and text[:100] in article.evidence):
+        return False
+    # Only publishable primary reports may compete for a limited edition slot.
+    # Grouped reports can still serve as comparison evidence without being used
+    # as the primary or as quoted copy.
+    try:
+        leading=short_excerpt(text,180-len(article.title))
+        prefix=f'据{article.publisher}报道：'
+        short_excerpt(text,min(180-len(article.title),220-len(article.title)-len(prefix)))
+    except EditorialError:
+        return False
+    return article.title+'. '+leading in article.evidence
 
 def short_excerpt(text, limit):
     result=''
