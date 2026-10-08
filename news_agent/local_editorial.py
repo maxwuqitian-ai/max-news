@@ -39,6 +39,29 @@ def story_schema(aliases):
         'cross_check': object_schema({'status': {'type': 'string', 'enum': ['independent', 'single_source', 'not_independent']},
                                       'note': {'type': 'string'}})})})
 
+def selection_audit_schema(events):
+    check = object_schema({
+        'genre': {'type': 'string', 'enum': ['breaking_news', 'explainer', 'recap', 'opinion', 'sports', 'entertainment', 'personal_interest']},
+        'reason': {'type': 'string'},
+        'category': {'type': 'string', 'enum': ['politics', 'economics', 'business', 'technology', 'world']},
+        'same_event': {'type': 'boolean'}, 'new_development': {'type': 'boolean'},
+        'globally_consequential': {'type': 'boolean'},
+        'duplicate_of': {'type': 'string', 'enum': ['none'] + [e['event_key'] for e in events]}})
+    return object_schema({'checks': object_schema({e['event_key']: check for e in events})})
+
+def validate_selection_audit(audit, events):
+    checks = audit.get('checks', {})
+    if not isinstance(checks, dict) or set(checks) != {e['event_key'] for e in events}:
+        raise EditorialError('Selection review failed: every event needs a separate type/category/impact assessment')
+    issues = []
+    for event in events:
+        c = checks[event['event_key']]
+        if (not isinstance(c, dict) or c.get('genre') != 'breaking_news' or c.get('category') != event['category']
+                or any(c.get(k) is not True for k in ('same_event', 'new_development', 'globally_consequential'))
+                or c.get('duplicate_of') != 'none' or not c.get('reason')):
+            issues.append(f"{event['event_key']}: {c}")
+    if issues: raise EditorialError('Selection review failed: ' + '; '.join(issues))
+
 STORY_SCHEMA = {
     'headline': '中立的简体中文标题',
     'is_conflict': 'JSON boolean; true for armed-conflict reporting',
@@ -147,24 +170,28 @@ def generate_local(config, articles, date, model, as_of):
         'schema': {'events': [{'event_key': 'short unique event key', 'category': 'politics',
                               'article_ids': ['existing short IDs'],
                               'scores': {'consequence': 5, 'timeliness': 5, 'credibility': 5, 'global_relevance': 5}}]}}
-    for attempt in range(2):
+    selection_attempts = config['model'].get('selection_attempts', 3)
+    for attempt in range(selection_attempts):
         ranked = model.ask(RANK_SYSTEM, ranking_payload)
         try:
             events = decode_selection(ranked.get('events', []), aliases, config)
-            audit = model.ask(SYSTEM, {
+            audit = model.ask(RANK_SYSTEM, {
                 'task': 'Audit the selected events BEFORE writing. Each event must contain only coverage of the SAME event, '
                         'and its event key and category must match its actual source titles. Reject unrelated merged articles, '
                         'misclassified categories, minor human-interest stories, explainers, recaps and duplicate events. '
-                        'Require substantive new developments and global importance. Return {"approved": true/false, "issues": [...]}.',
+                        'Assess EACH event separately: genre, category, same_event, new_development, globally_consequential, duplicate_of and reason. '
+                        'Cricket/sports fixtures are sports, never company business. A campaign rally interruption is minor without a major new policy. '
+                        'Government diplomatic/legal actions are politics; do not relabel them as economics to meet balance limits. '
+                        'Explain what actually changed and its global consequence. Set false if evidence is inadequate. '
+                        'Return {"checks": {event_key: assessment}}; duplicate_of is none unless it repeats another selected event.',
                 'events': [dict(event, sources=[{'title': by_id[aid].title, 'publisher': by_id[aid].publisher,
                                                 'lead': by_id[aid].evidence[:600]} for aid in event['article_ids']]) for event in events],
-                'preferences': config['editorial'], 'response_schema': REVIEW_SCHEMA})
-            if audit.get('approved') is not True or audit.get('issues') != []:
-                raise EditorialError('Selection review failed: ' + str(audit.get('issues', [])))
+                'preferences': config['editorial'], 'response_schema': selection_audit_schema(events)})
+            validate_selection_audit(audit, events)
             break
         except EditorialError as exc:
             LOG.warning('Selection rejected attempt=%d reason=%s', attempt + 1, str(exc))
-            if attempt == 1: raise
+            if attempt == selection_attempts - 1: raise
             ranking_payload['validation_error'] = str(exc)
             ranking_payload['previous_selection'] = ranked
     edition = {'date': date, 'as_of': as_of.isoformat(), 'stories': []}

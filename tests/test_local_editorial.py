@@ -47,6 +47,9 @@ def test_local_pipeline_reviews_every_story_and_final_edition(config, artifacts)
             self.calls += 1
             if payload['task'].startswith('Group reporting'):
                 return {'events': [dict(e, article_ids=[payload['articles'][i]['id']]) for i, e in enumerate(events)]}
+            if payload['task'].startswith('Audit the selected'):
+                return {'checks': {e['event_key']: {'genre': 'breaking_news', 'category': e['category'], 'same_event': True,
+                    'new_development': True, 'globally_consequential': True, 'duplicate_of': 'none', 'reason': 'Synthetic test assessment'} for e in payload['events']}}
             if not payload['task'].startswith('Write ONE'): return {'approved': True, 'issues': []}
             story = copy.deepcopy(edition['stories'][self.drafts])
             self.drafts += 1
@@ -120,3 +123,12 @@ def test_early_collection_uses_target_time_to_exclude_reports_stale_at_delivery(
     assert not is_fresh(article, target, 24)
     late = datetime.fromisoformat('2026-01-15T14:00:00+00:00')
     assert expected_send_time(config, late) == late
+
+
+def test_selection_review_cannot_approve_sports_as_company_news(artifacts):
+    from news_agent.local_editorial import validate_selection_audit
+    event = artifacts[1]['stories'][6]
+    check = {'genre': 'sports', 'category': 'business', 'same_event': True, 'new_development': True,
+             'globally_consequential': True, 'duplicate_of': 'none', 'reason': 'This concerns a cricket match'}
+    with pytest.raises(EditorialError, match='Selection review failed'):
+        validate_selection_audit({'checks': {event['event_key']: check}}, [event])
