@@ -1,1 +1,8 @@
-{}
+{
+  "test:launch-validation-2026-10-08:9f8e6d8e5c2447cc": {
+    "status": "pending",
+    "provider": "resend",
+    "date": "2026-10-08",
+    "attempted_at": "2026-10-08T13:46:27.246742+00:00"
+  }
+}
