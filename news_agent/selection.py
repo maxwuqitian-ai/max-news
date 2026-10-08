@@ -27,6 +27,17 @@ def primary_category(title, predicted):
     return predicted
 
 
+
+def conflict_theme(title):
+    """Count military tests and naval confrontations toward the conflict limit."""
+    text = title.casefold()
+    weapons = (re.search(r'武器|[导導][弹彈]|[飞飛][弹彈]|\b(?:missiles?|weapons?)\b', text)
+               and re.search(r'[试試]射|\btests?\b', text))
+    naval = (re.search(r'[舰艦]船|[军軍][舰艦]|海[军軍]|\b(?:naval|navy|warships?)\b', text)
+             and re.search(r'南海|[紧緊][张張]|[对對]峙|\b(?:tensions?|confrontation|south china sea)\b', text))
+    return bool(weapons or naval)
+
+
 def oil_market_event(article,timezone):
     """Consolidate the same day's regional stock declines linked to rising oil."""
     title=article['title'].casefold();text=title+' '+article.get('excerpt','').casefold()
@@ -125,7 +136,8 @@ def select(catalog, ratings, config, *, excluded=frozenset(),eligible_primary=No
         aid = article['id']; r = ratings[aid]
         if aid in excluded or r['category'] not in NEWS_CATEGORIES or r['genre'] != 'breaking_news':
             continue
-        r=dict(r,category=primary_category(article['title'],r['category']))
+        r=dict(r,category=primary_category(article['title'],r['category']),
+               is_conflict=r['is_conflict'] or conflict_theme(article['title']))
         key=oil_market_event(article,n['timezone']) or r['event_key']
         group = groups.setdefault(key, [])
         group.append((article, r))

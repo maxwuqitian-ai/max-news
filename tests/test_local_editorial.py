@@ -411,3 +411,21 @@ def test_grounded_translation_sees_selected_quotes_only(invented):
         story = grounded_draft(model,payload,{'s0':'actual-id'},passages)
         assert story['claims']['fact']['evidence'] == {'s0':['p0']}
         assert model.translations == 1
+
+
+def test_military_themes_count_toward_conflict_limit():
+    from news_agent.selection import conflict_theme
+    assert conflict_theme('南韓自主研發極音速滑翔載具武器 首次試射成功')
+    assert conflict_theme('菲律賓稱南海緊張升高 中國艦船增加')
+    assert conflict_theme('South China Sea naval tensions rise')
+    assert not conflict_theme('格芯為台積電製造AI晶片互連技術')
+    assert not conflict_theme('Company tests new AI software')
+
+
+def test_cna_noise_filter_preserves_major_company_and_acquisitions(config):
+    import re
+    pattern = next(x['exclude_title_pattern'] for x in config['sources'] if x['name']=='中央社财经')
+    assert re.search(pattern, '今彩539第115244期 頭獎槓龜')
+    assert re.search(pattern, '精誠資訊9月營收年增55% 緯致科技第3季寫新高')
+    assert not re.search(pattern, '台積電9月營收創新高')
+    assert not re.search(pattern, '格芯與台積電簽署20億美元協議')

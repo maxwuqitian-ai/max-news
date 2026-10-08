@@ -207,7 +207,16 @@ def collect(config, now=None, client=None):
     # Keep representation across sources without country quotas; editorial ranking follows.
     ordered = sorted(articles.values(), key=lambda a: a.published or a.discovered or '', reverse=True)
     buckets = {}
-    for article in ordered: buckets.setdefault(article.family, []).append(article)
+    family_sources = {}
+    for article in ordered:
+        family_sources.setdefault(article.family, {}).setdefault(article.publisher, []).append(article)
+    # A busy finance feed must not crowd out international reporting from the
+    # same publisher. Alternate its feeds before alternating publisher families.
+    for family, sources in family_sources.items():
+        bucket = buckets.setdefault(family, [])
+        while any(sources.values()):
+            for source in sources.values():
+                if source: bucket.append(source.pop(0))
     balanced = []
     while any(buckets.values()) and len(balanced) < config['newsletter']['max_candidates']:
         for bucket in buckets.values():

@@ -37,7 +37,7 @@ model:
   cache_dir: output/.model-cache
   cache_ttl_seconds: 14400
 sources:
-  - {name: 中央社财经, family: CNA, url: 'https://feeds.feedburner.com/rsscna/finance', domains: [cna.com.tw], minimum_evidence_characters: 50}
+  - {name: 中央社财经, family: CNA, url: 'https://feeds.feedburner.com/rsscna/finance', domains: [cna.com.tw], minimum_evidence_characters: 50, exclude_title_pattern: '(今彩|威力彩|大樂透|大乐透|頭獎|头奖)|^(?!.*(台積電|台积电|鴻海|鸿海|聯發科|联发科|三星|Samsung|TSMC|Foxconn)).*[月季][營营]收'}
   - {name: 中央社国际, family: CNA, url: 'https://feeds.feedburner.com/rsscna/intworld', domains: [cna.com.tw], minimum_evidence_characters: 50}
   - {name: FT中文网, family: FT, url: 'https://www.ftchinese.com/rss/news', domains: [ftchinese.com], minimum_evidence_characters: 50}
   - {name: 纽约时报中文网, family: NYT, url: 'https://cn.nytimes.com/rss/', domains: [cn.nytimes.com], minimum_evidence_characters: 50}
