@@ -22,18 +22,24 @@ def test_local_model_needs_no_api_key_and_returns_chinese_json(config, monkeypat
 def test_local_pipeline_reviews_every_story_and_final_edition(config, artifacts):
     articles, edition = artifacts
     config['model']['provider'] = 'ollama'
-    events = [{k: s[k] for k in ('event_key', 'category', 'article_ids', 'scores')} for s in edition['stories']]
+    events = [dict({k: s[k] for k in ('event_key', 'category', 'scores')}, article_ids=[f'a{i}']) for i, s in enumerate(edition['stories'])]
     class FakeModel:
         calls = 0
+        drafts = 0
         def ask(self, system, payload):
             self.calls += 1
-            if self.calls == 1: return {'events': events}
-            if self.calls == 22 or self.calls % 2 == 1: return {'approved': True, 'issues': []}
-            return {'story': copy.deepcopy(edition['stories'][(self.calls - 2)//2])}
+            if payload['task'].startswith('Group reporting'): return {'events': events}
+            if not payload['task'].startswith('Write ONE'): return {'approved': True, 'issues': []}
+            story = copy.deepcopy(edition['stories'][self.drafts])
+            self.drafts += 1
+            story['freshness']['article_id'] = 's0'
+            for claim in story['claims']:
+                for ref in claim['evidence']: ref['article_id'] = 's0'
+            return {'story': story}
         def close(self): pass
     model = FakeModel()
     result = generate(config, articles, edition['date'], model=model, as_of=datetime.fromisoformat(edition['as_of']))
-    assert model.calls == 22 and result['editorial_mode'] == 'local_per_story_review'
+    assert model.calls == 23 and result['editorial_mode'] == 'local_per_story_review'
 
 
 def test_preparation_starts_early_but_send_gate_remains_0800(config):
@@ -55,3 +61,29 @@ def test_static_real_sample_has_matching_citations_and_original_urls(config):
     assert len(articles) == 13
     assert edition['editorial_mode'] == 'manually_curated_source_audit'
     assert len({a.url for a in articles}) == 13
+
+
+def test_local_rejects_mismatched_selection_before_writing(config, artifacts):
+    articles, edition = artifacts
+    config['model']['provider'] = 'ollama'
+    events = [dict({k: s[k] for k in ('event_key', 'category', 'scores')}, article_ids=[f'a{i}']) for i, s in enumerate(edition['stories'])]
+    class ModelRejectingSelection:
+        drafts = 0
+        def ask(self, system, payload):
+            if payload['task'].startswith('Group reporting'): return {'events': events}
+            if payload['task'].startswith('Write ONE'): self.drafts += 1
+            return {'approved': False, 'issues': ['Event key does not match the actual source title']}
+        def close(self): pass
+    model = ModelRejectingSelection()
+    with pytest.raises(EditorialError, match='Selection review failed'):
+        generate(config, articles, edition['date'], model=model, as_of=datetime.fromisoformat(edition['as_of']))
+    assert model.drafts == 0
+
+
+def test_local_rejects_invented_evidence_reference(artifacts):
+    from news_agent.local_editorial import resolve_story
+    _, edition = artifacts
+    story = copy.deepcopy(edition['stories'][0])
+    story['freshness']['article_id'] = 'invented'
+    with pytest.raises(EditorialError, match='provided short source IDs'):
+        resolve_story(story, story, {'s0': 'article-0'})
