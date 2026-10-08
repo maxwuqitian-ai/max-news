@@ -238,47 +238,7 @@ def generate_local(config, articles, date, model, as_of):
     edition = {'date': date, 'as_of': as_of.isoformat(), 'stories': []}
     for index, event in enumerate(events, 1):
         LOG.info('Local editorial story=%d/%d event=%s', index, len(events), event.get('event_key'))
-        evidence = [by_id[aid].to_dict() for aid in event['article_ids']]
-        source_aliases = {f's{i}': aid for i, aid in enumerate(event['article_ids'])}
-        passages = {alias: evidence_passages(by_id[aid].evidence) for alias, aid in source_aliases.items()}
-        if any(not p for p in passages.values()): raise EditorialError('Insufficient source passages')
-        writing_evidence = [dict({k: v for k, v in by_id[aid].to_dict().items() if k != 'evidence'},
-                                 id=alias, passages=passages[alias]) for alias, aid in source_aliases.items()]
-        payload = {'task': 'Write ONE concise Chinese story with 2–3 grounded paragraphs. '
-                           'Use approximately 120–220 Chinese characters total, with substantive details and essential context. Omit filler and process commentary. Do not invent background. '
-                           'Use only supplied source IDs and passage IDs in citations; cite all passages needed for EVERY assertion. '
-                           'Do not copy quotes or append annotations. Use established Chinese place names; retain original names if unsure. '
-                           'Set is_conflict true for armed conflict. A single provided report is single_source, never independently cross-checked. '
-                           'Return {"story": {...}}.',
-                   'event': {'event_key': event['event_key'], 'category': event['category']},
-                   'articles': writing_evidence, 'schema': {'story': STORY_SCHEMA},
-                   'response_schema': story_schema(source_aliases, passages)}
-        story = None
-        single = copy.deepcopy(config)
-        single['newsletter'].update(min_stories=1, max_stories=1)
-        # One supported repair attempt for malformed structure/quotes, using precise validation evidence.
-        for attempt in range(2):
-            raw_candidate = model.ask(SYSTEM, payload).get('story', {})
-            try:
-                candidate = resolve_story(raw_candidate, event, source_aliases, passages)
-                validate({'date': date, 'as_of': as_of.isoformat(), 'stories': [candidate]}, articles, single, date, enforce_balance=False)
-                story = candidate
-                break
-            except EditorialError as exc:
-                if attempt == 1: raise
-                payload['validation_error'] = str(exc)
-                payload['previous_story'] = raw_candidate
-        review = model.ask(SYSTEM, {
-            'task': 'Verify this single story against provided source evidence. Check EVERY Chinese assertion, '
-                    'dates/numbers, neutral political language, source independence, headline entailment, '
-                    'adequate background, Simplified Chinese quality, and a concrete new development during the freshness window. '
-                    'Verify the category, armed-conflict flag, and that all sources cover the same event. '
-                    'No claim may rest on navigation or unrelated recommended links. '
-                    'Return {"approved": true/false, "issues": [specific problems]}. Fail closed.',
-            'story': story, 'articles': evidence, 'response_schema': REVIEW_SCHEMA})
-        if review.get('approved') is not True or review.get('issues') != []:
-            raise EditorialError(f"Local editorial verification failed for {event.get('event_key')}: {review.get('issues', [])}")
-        edition['stories'].append(story)
+        edition['stories'].append(write_story(config, articles, date, model, event, as_of))
     validate(edition, articles, config, date)
     review = model.ask(SYSTEM, {
         'task': 'Final edition audit: are all events distinct and globally consequential? '
@@ -293,3 +253,59 @@ def generate_local(config, articles, date, model, as_of):
         raise EditorialError('Local final edition review failed')
     edition.update(review=review, model=config['model']['name'], editorial_mode='local_per_story_review')
     return edition
+
+
+def write_story(config, articles, date, model, event, as_of):
+    by_id = {a.id: a for a in articles}
+    evidence = [by_id[aid].to_dict() for aid in event['article_ids']]
+    source_aliases = {f's{i}': aid for i, aid in enumerate(event['article_ids'])}
+    passages = {alias: evidence_passages(by_id[aid].evidence) for alias, aid in source_aliases.items()}
+    if any(not p for p in passages.values()): raise EditorialError('Insufficient source passages')
+    writing_evidence = [dict({k: v for k, v in by_id[aid].to_dict().items() if k != 'evidence'},
+                             id=alias, passages=passages[alias]) for alias, aid in source_aliases.items()]
+    payload = {'task': 'Write ONE concise Chinese story with 2–3 grounded paragraphs. '
+                       'Use approximately 120–220 Chinese characters total, with substantive details and essential context. Omit filler and process commentary. Do not invent background. '
+                       'Use only supplied source IDs and passage IDs in citations; cite all passages needed for EVERY assertion. '
+                       'Do not copy quotes or append annotations. Use established Chinese place names; retain original names if unsure. '
+                       'Set is_conflict true for armed conflict. A single provided report is single_source, never independently cross-checked. '
+                       'Return {"story": {...}}.',
+               'event': {'event_key': event['event_key'], 'category': event['category']},
+               'articles': writing_evidence, 'schema': {'story': STORY_SCHEMA},
+               'response_schema': story_schema(source_aliases, passages)}
+    single = copy.deepcopy(config)
+    single['newsletter'].update(min_stories=1, max_stories=1)
+    # Feedback must change the draft, never the approval criteria. In particular,
+    # unsupported background is removed rather than invented to satisfy a review.
+    accepted = False
+    for revision in range(config['model'].get('story_attempts', 2)):
+        for attempt in range(2):
+            raw_candidate = model.ask(SYSTEM, payload).get('story', {})
+            try:
+                story = resolve_story(raw_candidate, event, source_aliases, passages)
+                validate({'date': date, 'as_of': as_of.isoformat(), 'stories': [story]}, articles, single, date, enforce_balance=False)
+                break
+            except EditorialError as exc:
+                if attempt == 1: raise
+                payload['validation_error'] = str(exc)
+                payload['previous_story'] = raw_candidate
+        review = model.ask(SYSTEM, {
+            'task': 'Verify this single story against provided source evidence. Check EVERY Chinese assertion, '
+                    'dates/numbers, neutral political language, source independence, headline entailment, '
+                    'Simplified Chinese quality, and a concrete new development during the freshness window. '
+                    'Background must be supported, but no additional background is required when unavailable. '
+                    'Claims not independently established must be explicitly attributed to the reporting or speaker. '
+                    'Do not demand nonexistent independent sources; reject false independent-verification claims. '
+                    'Verify the category, armed-conflict flag, and that all sources cover the same event. '
+                    'No claim may rest on navigation or unrelated recommended links. '
+                    'Return {"approved": true/false, "issues": [specific problems]}. Fail closed.',
+            'story': story, 'articles': evidence, 'response_schema': REVIEW_SCHEMA})
+        if review.get('approved') is True and review.get('issues') == []:
+            accepted = True
+            break
+        LOG.warning('Story review rejected event=%s revision=%d issues=%s', event['event_key'], revision + 1, review.get('issues', []))
+        payload['review_issues'] = review.get('issues', ['Review did not approve this story'])
+        payload['previous_story'] = raw_candidate
+        payload['revision_instruction'] = 'Correct every review issue. Remove unsupported details; preserve attribution and uncertainty. Never add facts from memory. Cite the supplied passages and return a revised story for a new independent review.'
+    if not accepted:
+        raise EditorialError(f"Local editorial verification failed after revision for {event.get('event_key')}: {review.get('issues', [])}")
+    return story

@@ -67,11 +67,15 @@ def test_local_pipeline_reviews_every_story_and_final_edition(config, artifacts)
     assert model.calls == 23 and result['editorial_mode'] == 'local_per_story_review'
 
 
-def test_preparation_starts_early_but_send_gate_remains_0800(config):
+@pytest.mark.parametrize('start,just_before,target', [
+    ('2026-07-15T09:30:00+00:00', '2026-07-15T09:29:00+00:00', '2026-07-15T12:00:00+00:00'),
+    ('2026-01-15T10:30:00+00:00', '2026-01-15T10:29:00+00:00', '2026-01-15T13:00:00+00:00')])
+def test_preparation_starts_early_but_send_gate_remains_0800(config, start, just_before, target):
     config['newsletter']['delivery_enabled'] = True
-    now = datetime.fromisoformat('2026-07-15T10:00:00+00:00')
+    now = datetime.fromisoformat(start)
     assert preparation_due(config, now) and not schedule_due(config, now)
-    assert not preparation_due(config, datetime.fromisoformat('2026-07-15T09:59:00+00:00'))
+    assert not preparation_due(config, datetime.fromisoformat(just_before))
+    assert schedule_due(config, datetime.fromisoformat(target))
 
 
 def test_static_real_sample_has_matching_citations_and_original_urls(config):
@@ -179,3 +183,56 @@ def test_company_earnings_and_weather_use_primary_topic():
     assert primary_category('AI chip demand pushes company profits to a record', 'technology') == 'business'
     assert primary_category('Isaias strengthens into the first hurricane', 'economics') == 'world'
     assert primary_category('Industrial profits rise across China', 'economics') == 'economics'
+
+
+@pytest.mark.parametrize('corrected_review_passes', [True, False])
+def test_rejected_story_is_rewritten_and_requires_a_new_review(config, artifacts, corrected_review_passes):
+    from news_agent.local_editorial import write_story
+    articles, edition = artifacts
+    event = edition['stories'][0]
+    class RevisingModel:
+        drafts = 0
+        reviews = 0
+        feedback_seen = False
+        def ask(self, system, payload):
+            if payload['task'].startswith('Write ONE'):
+                self.drafts += 1
+                if self.drafts == 2:
+                    self.feedback_seen = payload['review_issues'] == ['Remove unsupported background']
+                story = copy.deepcopy(event)
+                for ref in [story['freshness']] + [e for c in story['claims'] for e in c['evidence']]:
+                    ref.update(article_id='s0', passage_id='p0'); ref.pop('quote')
+                return {'story': story}
+            self.reviews += 1
+            approved = self.reviews == 2 and corrected_review_passes
+            return {'approved': approved, 'issues': [] if approved else ['Remove unsupported background']}
+    model = RevisingModel()
+    if corrected_review_passes:
+        result = write_story(config, articles, edition['date'], model, event, datetime.fromisoformat(edition['as_of']))
+        assert result['freshness']['quote'] == articles[0].evidence
+    else:
+        with pytest.raises(EditorialError, match='failed after revision'):
+            write_story(config, articles, edition['date'], model, event, datetime.fromisoformat(edition['as_of']))
+    assert model.feedback_seen and model.drafts == model.reviews == 2
+
+
+@respx.mock
+def test_model_checkpoints_require_exact_inputs_and_have_an_expiry(config):
+    import json, time
+    from pathlib import Path
+    config['model'].update(provider='ollama', api_key_env=None)
+    route = respx.post('http://127.0.0.1:11434/api/chat').mock(return_value=httpx.Response(200,
+        json={'message': {'content': '{"approved":true,"issues":[]}'}}))
+    model = Model(config['model'])
+    try:
+        model.ask('Review', {'task': 'test', 'source': 'Original publisher evidence'})
+        model.ask('Review', {'task': 'test', 'source': 'Original publisher evidence'})
+        assert route.call_count == 1
+        model.ask('Review', {'task': 'test', 'source': 'Changed publisher evidence'})
+        model.ask('Changed review rules', {'task': 'test', 'source': 'Original publisher evidence'})
+        assert route.call_count == 3
+        for p in Path(config['model']['cache_dir']).glob('*.json'):
+            entry = json.loads(p.read_text()); entry['created_at'] = time.time()-14401; p.write_text(json.dumps(entry))
+        model.ask('Review', {'task': 'test', 'source': 'Original publisher evidence'})
+        assert route.call_count == 4
+    finally: model.close()

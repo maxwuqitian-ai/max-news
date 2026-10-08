@@ -1,7 +1,7 @@
 newsletter:
   timezone: America/New_York
   target_time: '08:00'
-  preparation_minutes: 120
+  preparation_minutes: 150
   min_stories: 10
   max_stories: 15
   lookback_hours: 24
@@ -25,6 +25,9 @@ model:
   selection_batch_size: 20
   selection_excerpt_characters: 240
   selection_attempts: 3
+  story_attempts: 2
+  cache_dir: output/.model-cache
+  cache_ttl_seconds: 14400
 sources:
   - {name: BBC, family: BBC, url: 'https://feeds.bbci.co.uk/news/world/rss.xml', domains: [bbc.com, bbc.co.uk]}
   - {name: BBC US, family: BBC, url: 'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml', domains: [bbc.com, bbc.co.uk]}

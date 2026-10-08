@@ -13,6 +13,7 @@ def config(tmp_path):
     c['model']['api_key_env'] = 'NEWS_LLM_API_KEY'
     c['newsletter']['state_dir'] = str(tmp_path / 'state')
     c['newsletter']['output_dir'] = str(tmp_path / 'output')
+    c['model']['cache_dir'] = str(tmp_path / 'model-cache')
     return c
 
 

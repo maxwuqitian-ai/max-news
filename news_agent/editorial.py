@@ -2,6 +2,9 @@
 import json
 import os
 import re
+from hashlib import sha256
+from pathlib import Path
+import time
 from datetime import datetime, timezone
 import httpx
 from .collect import preliminary_groups
@@ -42,6 +45,27 @@ class Model:
     def close(self):
         if self.owns: self.client.close()
     def ask(self, system, payload):
+        # Exact-input checkpoints only: a changed prompt, source passage, model,
+        # or generation setting must produce a new request. Freshness and
+        # editorial validation still run after loading a cached response.
+        directory = self.config.get('cache_dir') if self.config.get('provider') == 'ollama' else None
+        if not directory: return self._ask(system, payload)
+        fingerprint = json.dumps({'version': 1, 'system': system, 'payload': payload,
+            'settings': {k: self.config.get(k) for k in ('provider', 'base_url', 'name', 'context_size', 'max_output_tokens')}},
+            ensure_ascii=False, sort_keys=True, separators=(',', ':'))
+        path = Path(directory) / (sha256(fingerprint.encode()).hexdigest() + '.json')
+        try:
+            entry = json.loads(path.read_text())
+            if 0 <= time.time() - entry['created_at'] <= self.config.get('cache_ttl_seconds', 14400) and isinstance(entry['response'], dict):
+                return entry['response']
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
+        result = self._ask(system, payload)
+        from .delivery import atomic_json
+        atomic_json(path, {'created_at': time.time(), 'response': result})
+        return result
+
+    def _ask(self, system, payload):
         if self.config.get('provider') == 'ollama':
             prompt = {k: v for k, v in payload.items() if k != 'response_schema'}
             response = self.client.post(self.config['base_url'].rstrip('/') + '/api/chat', json={
