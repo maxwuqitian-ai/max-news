@@ -429,3 +429,19 @@ def test_cna_noise_filter_preserves_major_company_and_acquisitions(config):
     assert re.search(pattern, '精誠資訊9月營收年增55% 緯致科技第3季寫新高')
     assert not re.search(pattern, '台積電9月營收創新高')
     assert not re.search(pattern, '格芯與台積電簽署20億美元協議')
+
+
+def test_selection_does_not_hide_military_reports_in_nonconflict_slots(config):
+    from news_agent.selection import select
+    catalog = [{'id':f'a{i}','title':f'Article {i}','family':f'publisher-{i}',
+                'published_age_hours':1} for i in range(13)]
+    categories = ['politics']*3 + ['economics']*3 + ['business']*2 + ['technology']*2 + ['politics']*3
+    ratings = {a['id']:{'category':categories[i],'genre':'breaking_news','event_key':f'event_{i}',
+        'is_conflict':False,'consequence':4 if i<10 else 5,'global_relevance':4} for i,a in enumerate(catalog)}
+    catalog[10]['title']='South China Sea naval tensions rise'
+    catalog[11]['title']='南韓新武器首次試射成功'
+    catalog[12]['title']='南海軍艦對峙緊張升高'
+    selected=select(catalog,ratings,config)
+    military=[e for e in selected if any(aid in {'a10','a11','a12'} for aid in e['article_ids'])]
+    assert military and all(e['is_conflict'] for e in military)
+    assert len(military)<=len(selected)*config['editorial']['conflict_max_share']
