@@ -183,5 +183,6 @@ jobs:
             output/edition.json
             output/articles.json
             output/collection-report.json
+            output/selection-assessments.json
           retention-days: 7
           if-no-files-found: ignore

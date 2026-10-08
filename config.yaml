@@ -79,6 +79,9 @@ editorial:
   # Global relevance contributes to ranking; significant national/sector news
   # remains eligible and must pass the consequence and importance audits.
   minimum_global_relevance: 0
+  # These are preliminary model scores, not the final publication decision.
+  # Final per-event review must still establish major national/sector importance.
+  minimum_consequence: 2
   focus: [politics, economics, companies, mergers_and_acquisitions, technology, major_china_us_news]
   # Topic balance, not country quotas; never fill gaps with stale or low-impact items.
   section_order: [politics, economics, business, technology]

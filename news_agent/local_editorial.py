@@ -260,6 +260,12 @@ def generate_local(config, articles, date, model, as_of):
         catalog.append(item)
     from .selection import classify, select
     ratings = classify(catalog, model, RANK_SYSTEM, config)
+    from .delivery import atomic_json
+    from pathlib import Path
+    atomic_json(Path(config['newsletter']['output_dir']) / 'selection-assessments.json',
+        {'as_of':as_of.isoformat(),'articles':[dict(item,article_id=aliases[item['id']],
+            assessment={key:ratings[item['id']][key] for key in
+                ('category','genre','event_key','is_conflict','consequence','global_relevance')}) for item in catalog]})
     excluded = {alias for alias,aid in aliases.items() if excerpt_mode and opinion_url(by_id[aid].url)}
     publishable = {alias for alias,aid in aliases.items() if eligible(by_id[aid])} if excerpt_mode else None
     selection_attempts = config['model'].get('selection_attempts', 3)
