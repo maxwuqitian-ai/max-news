@@ -2,7 +2,8 @@ newsletter:
   timezone: America/New_York
   target_time: '08:00'
   preparation_minutes: 150
-  min_stories: 10
+  # The user requested variable counts; never pad a quiet day with stale or minor news.
+  min_stories: 6
   max_stories: 15
   lookback_hours: 24
   max_edition_age_hours: 4
@@ -40,7 +41,7 @@ sources:
   - {name: 纽约时报中文网, family: NYT, url: 'https://cn.nytimes.com/rss/', domains: [cn.nytimes.com], minimum_evidence_characters: 50}
   - {name: BBC中文, family: BBC, url: 'https://feeds.bbci.co.uk/zhongwen/simp/rss.xml', domains: [bbc.com, bbc.co.uk], minimum_evidence_characters: 50}
   - {name: 德国之声中文, family: DW, url: 'https://rss.dw.com/rdf/rss-chi-all', domains: [dw.com], minimum_evidence_characters: 50}
-  - {name: 法国国际广播电台, family: RFI, url: 'https://www.rfi.fr/cn/rss', domains: [rfi.fr], minimum_evidence_characters: 50}
+  - {name: 法国国际广播电台, family: RFI, url: 'https://www.rfi.fr/cn/rss', domains: [rfi.fr], minimum_evidence_characters: 50, exclude_url_pattern: '/专栏检索/'}
   - {name: 科技新报, family: TechNews, url: 'https://technews.tw/feed/', domains: [technews.tw], minimum_evidence_characters: 50, exclude_title_pattern: '月[營营]收'}
   - {name: BBC, family: BBC, url: 'https://feeds.bbci.co.uk/news/world/rss.xml', domains: [bbc.com, bbc.co.uk]}
   - {name: BBC US, family: BBC, url: 'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml', domains: [bbc.com, bbc.co.uk]}

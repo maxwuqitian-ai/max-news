@@ -12,6 +12,7 @@ def config(tmp_path):
     c['model']['provider'] = 'openai'
     c['model']['grounded_translation'] = False
     c['editorial']['mode'] = 'generative'
+    c['newsletter']['min_stories'] = 10
     c['model']['api_key_env'] = 'NEWS_LLM_API_KEY'
     c['newsletter']['state_dir'] = str(tmp_path / 'state')
     c['newsletter']['output_dir'] = str(tmp_path / 'output')

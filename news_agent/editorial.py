@@ -106,7 +106,7 @@ def validate(edition, articles, config, edition_date, *, enforce_balance=True):
     if edition.get('date') != edition_date: raise EditorialError('Edition date mismatch')
     stories = edition.get('stories', [])
     if not n['min_stories'] <= len(stories) <= n['max_stories']:
-        raise EditorialError('Edition must have 10–15 substantial verified events')
+        raise EditorialError(f"Edition must have {n['min_stories']}–{n['max_stories']} substantial verified events")
     by_id = {a.id: a for a in articles}
     try: as_of = timestamp(edition.get('as_of'))
     except ValueError as exc: raise EditorialError(str(exc)) from exc
@@ -201,7 +201,8 @@ def generate(config, articles, edition_date, model=None, as_of=None):
         raise EditorialError('Insufficient publisher diversity for a global briefing')
     model = model or Model(config['model'])
     try:
-        if config['model'].get('provider') == 'ollama':
+        if (config['model'].get('provider') == 'ollama'
+                or config['editorial'].get('mode') == 'publisher_chinese_excerpt'):
             from .local_editorial import generate_local
             return generate_local(config, articles, edition_date, model, as_of)
         payload = {

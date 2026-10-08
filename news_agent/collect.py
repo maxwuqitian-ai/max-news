@@ -7,7 +7,7 @@ from html.parser import HTMLParser
 import logging
 import json
 import re
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit, unquote
 import feedparser
 import httpx
 from .net import get
@@ -159,6 +159,8 @@ def collect(config, now=None, client=None):
                         if exclusion and re.search(exclusion,entry.get('title','')): continue
                         url = canonical_url(entry.get('link', ''))
                         if not allowed(url, source['domains']): continue
+                        if source.get('exclude_url_pattern') and re.search(source['exclude_url_pattern'],unquote(urlsplit(url).path)):
+                            continue
                         body = ' '.join(c.get('value', '') for c in entry.get('content', [])) or entry.get('summary', '')
                         evidence = entry.get('title', '') + '. ' + body
                         article = make_article(entry.get('title', ''), url, source['name'], source['family'], published, evidence, now,
