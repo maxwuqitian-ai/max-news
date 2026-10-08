@@ -21,6 +21,7 @@ model:
   timeout_seconds: 900
   context_size: 32768
   max_output_tokens: 6000
+  ranking_excerpt_characters: 400
 sources:
   - {name: BBC, family: BBC, url: 'https://feeds.bbci.co.uk/news/world/rss.xml', domains: [bbc.com, bbc.co.uk]}
   - {name: BBC US, family: BBC, url: 'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml', domains: [bbc.com, bbc.co.uk]}

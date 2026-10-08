@@ -196,11 +196,12 @@ def collect(config, now=None, client=None):
     domains = list({d for source in config['sources'] for d in source.get('domains', [])} | set(gdelt['publishers']))
     def enrich(article):
         try:
-            if len(article.evidence) < 1200 or article.method == 'gdelt_discovery_time':
-                body, published = publisher_page(client, article.url, domains)
-                if article.published is None and published:
-                    article.published = published.isoformat()
-                if len(body) >= 300: article.evidence = (article.evidence + ' ' + body)[:6000]
+            body, published = publisher_page(client, article.url, domains)
+            # Some RSS pubDate fields track updates. Prefer the publisher's
+            # original publication metadata, even when it makes coverage stale.
+            if published:
+                article.published = published.isoformat()
+            if len(body) >= 300: article.evidence = (article.evidence + ' ' + body)[:6000]
         except (httpx.HTTPError, ValueError): pass
         return article
     try:

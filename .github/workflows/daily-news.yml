@@ -1,7 +1,5 @@
 name: Daily Chinese news
 on:
-  push:
-    branches: [main]
   # GitHub cron is UTC. These cover both EST/EDT with a local-time gate below.
   # Later ticks recover from runner delays; the durable ledger prevents duplicates.
   schedule:
@@ -39,7 +37,6 @@ jobs:
       - run: python -m pytest -q
   briefing:
     needs: validate
-    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 180
     env:

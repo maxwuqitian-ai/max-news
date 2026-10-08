@@ -24,7 +24,7 @@ def generate_local(config, articles, date, model, as_of):
     by_id = {a.id: a for a in articles}
     catalog = [{'id': a.id, 'title': a.title, 'publisher': a.publisher, 'family': a.family,
                 'published': a.published, 'discovered': a.discovered,
-                'excerpt': a.evidence[:900]} for a in articles]
+                'excerpt': a.evidence[:config['model'].get('ranking_excerpt_characters', 400)]} for a in articles]
     ranked = model.ask(SYSTEM, {
         'task': 'Group reporting of the same event across languages and select 10–15 highest-impact distinct events. '
                 'Do not write summaries yet. Vary category counts with important developments each day, without fixed category quotas; economics and companies must get substantive coverage. '

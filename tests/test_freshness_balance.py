@@ -84,3 +84,20 @@ def test_jsonld_uses_article_publication_not_modification_time():
     p = PublicationParser()
     p.feed('<script type="application/ld+json">{"@type":"NewsArticle","datePublished":"2026-01-01T11:00:00Z","dateModified":"2026-01-15T11:00:00Z"}</script>')
     assert p.published == datetime(2026,1,1,11,tzinfo=timezone.utc)
+
+
+@respx.mock
+def test_rss_update_cannot_override_stale_publisher_publication(config):
+    config['sources'] = [{'name': 'Fixture', 'family': 'Fixture', 'url': 'https://feed.example/rss', 'domains': ['publisher.example']}]
+    config['gdelt']['enabled'] = False
+    # A long RSS body must not bypass verification of the original timestamp.
+    body = 'Synthetic source evidence for testing publication metadata. ' * 30
+    feed = ('<rss version="2.0"><channel><item><title>Updated old article</title>'
+            '<link>https://publisher.example/old</link><pubDate>Thu, 15 Jan 2026 11:00:00 GMT</pubDate>'
+            f'<description>{body}</description></item></channel></rss>')
+    respx.get('https://feed.example/rss').mock(return_value=httpx.Response(200, text=feed))
+    respx.get('https://publisher.example/old').mock(return_value=httpx.Response(200,
+        text='<meta property="article:published_time" content="2026-01-01T11:00:00Z"><p>' + body + '</p>'))
+    with httpx.Client() as client:
+        articles, _ = collect(config, datetime(2026, 1, 15, 12, tzinfo=timezone.utc), client)
+    assert articles == []

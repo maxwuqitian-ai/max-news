@@ -11,16 +11,28 @@ jobs:
       NEWS_SENDER: ${{ secrets.NEWS_SENDER }}
       NEWS_RECIPIENT: ${{ secrets.NEWS_RECIPIENT }}
     steps:
-      - name: Check required delivery secrets without exposing values
+      - name: Check RESEND_API_KEY
         run: |
           python3 - <<'PY'
           import os
-          required = ('RESEND_API_KEY', 'NEWS_SENDER', 'NEWS_RECIPIENT')
-          missing = [name for name in required if not os.environ.get(name)]
-          for name in required:
-              print(name + ': ' + ('configured' if name not in missing else 'missing'))
-          if missing:
-              raise SystemExit('Configure GitHub Actions Secrets: ' + ', '.join(missing))
+          if not os.environ.get('RESEND_API_KEY'):
+              raise SystemExit('Missing GitHub Actions Secret: RESEND_API_KEY')
+          PY
+      - name: Check NEWS_SENDER
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os
+          if not os.environ.get('NEWS_SENDER'):
+              raise SystemExit('Missing GitHub Actions Secret: NEWS_SENDER')
+          PY
+      - name: Check NEWS_RECIPIENT
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os
+          if not os.environ.get('NEWS_RECIPIENT'):
+              raise SystemExit('Missing GitHub Actions Secret: NEWS_RECIPIENT')
           PY
   test:
     runs-on: ubuntu-latest
