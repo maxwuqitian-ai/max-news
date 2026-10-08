@@ -1,15 +1,19 @@
 """Preserve publisher Chinese; models select news, never rewrite its facts."""
 import copy
 import re
+from urllib.parse import unquote, urlsplit
 from opencc import OpenCC
 from .editorial import EditorialError
 
-CONVERTER = OpenCC('t2s')
+CONVERTER = OpenCC('tw2sp')
 
 def simplified(text):
     return CONVERTER.convert(text)
 
-def eligible(article):
+def eligible(article, *, exclude_opinion=True):
+    if exclude_opinion and re.search(r'/(?:专栏检索|opinion|opinions|editorial|column|news-analysis|analysis|blog|review)/',
+                 unquote(urlsplit(article.url).path),re.IGNORECASE):
+        return False
     text = article.publisher_excerpt
     return bool(text and len(re.findall(r'[\u4e00-\u9fff]',article.title))>=4
                 and len(re.findall(r'[\u4e00-\u9fff]',text))>=20 and text[:100] in article.evidence)

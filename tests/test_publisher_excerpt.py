@@ -4,7 +4,7 @@ from datetime import datetime
 import pytest
 from news_agent.collect import Article
 from news_agent.editorial import EditorialError,validate
-from news_agent.publisher_excerpt import compile_story,short_excerpt,verify_story
+from news_agent.publisher_excerpt import compile_story,short_excerpt,verify_story,eligible
 from news_agent.render import render
 
 def fixture():
@@ -37,3 +37,10 @@ def test_altered_figures_and_names_are_rejected_before_delivery(change):
 def test_short_excerpt_never_cuts_a_decimal_as_a_sentence_boundary():
     source='这是合成测试，银行将利率上调0.25个百分点。下一句说明其他背景。'
     assert short_excerpt(source,len(source)-8)=='这是合成测试，银行将利率上调0.25个百分点。'
+
+def test_opinion_paths_are_excluded_even_when_discovered_outside_rss():
+    article,_=fixture();assert eligible(article)
+    article.url='https://publisher.example/opinion/policy'
+    assert not eligible(article)
+    article.url='https://publisher.example/%E4%B8%93%E6%A0%8F%E6%A3%80%E7%B4%A2/policy'
+    assert not eligible(article)
