@@ -29,13 +29,16 @@ def primary_category(title, predicted):
 
 
 def conflict_theme(title):
-    """Count military tests and naval confrontations toward the conflict limit."""
+    """Count military, attack and ceasefire reporting toward the conflict limit."""
     text = title.casefold()
     weapons = (re.search(r'武器|[导導][弹彈]|[飞飛][弹彈]|\b(?:missiles?|weapons?)\b', text)
                and re.search(r'[试試]射|\btests?\b', text))
     naval = (re.search(r'[舰艦]船|[军軍][舰艦]|海[军軍]|\b(?:naval|navy|warships?)\b', text)
              and re.search(r'南海|[紧緊][张張]|[对對]峙|\b(?:tensions?|confrontation|south china sea)\b', text))
-    return bool(weapons or naval)
+    direct_war = re.search(r'停火|停[战戰]|[战戰]事|[战戰]火|[战戰][场場]|前[线線]|空[袭襲]|[炮砲][击擊]|[轰轟]炸|\b(?:ceasefires?|shelling|bombardment|airstrikes?)\b', text)
+    conflict_context = re.search(r'伊朗|以色列|加[沙薩]|[乌烏]克[兰蘭]|[军軍][队隊]|[军軍]方|美[军軍]|\b(?:iran|israel|gaza|ukraine|russia|army|military)\b', text)
+    attack = re.search(r'攻[击擊]|[袭襲][击擊]|[开開][战戰]|[进進]攻|\b(?:attacks?|strikes?)\b|(?<!trade )\bwar\b', text)
+    return bool(weapons or naval or direct_war or (conflict_context and attack))
 
 
 def oil_market_event(article,timezone):

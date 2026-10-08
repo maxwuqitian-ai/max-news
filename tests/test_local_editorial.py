@@ -420,6 +420,11 @@ def test_military_themes_count_toward_conflict_limit():
     assert conflict_theme('South China Sea naval tensions rise')
     assert not conflict_theme('格芯為台積電製造AI晶片互連技術')
     assert not conflict_theme('Company tests new AI software')
+    assert conflict_theme('川普稱和伊朗討論富有成效 美期中選舉前不會恢復攻擊')
+    assert conflict_theme('乌克兰政坛出现停战谈判呼声')
+    assert conflict_theme('Trump rules out attacks on Iran before midterms')
+    assert not conflict_theme('特朗普攻击参院民主党候选人')
+    assert not conflict_theme('China-US trade war tariffs rise')
 
 
 def test_cna_noise_filter_preserves_major_company_and_acquisitions(config):
