@@ -129,8 +129,8 @@ def test_local_pipeline_reviews_every_story_and_final_edition(config, artifacts)
 
 
 @pytest.mark.parametrize('start,just_before,target', [
-    ('2026-07-15T09:30:00+00:00', '2026-07-15T09:29:00+00:00', '2026-07-15T12:00:00+00:00'),
-    ('2026-01-15T10:30:00+00:00', '2026-01-15T10:29:00+00:00', '2026-01-15T13:00:00+00:00')])
+    ('2026-07-15T08:30:00+00:00', '2026-07-15T08:29:00+00:00', '2026-07-15T12:00:00+00:00'),
+    ('2026-01-15T09:30:00+00:00', '2026-01-15T09:29:00+00:00', '2026-01-15T13:00:00+00:00')])
 def test_preparation_starts_early_but_send_gate_remains_0800(config, start, just_before, target):
     config['newsletter']['delivery_enabled'] = True
     now = datetime.fromisoformat(start)

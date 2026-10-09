@@ -1,7 +1,7 @@
 newsletter:
   timezone: America/New_York
   target_time: '08:00'
-  preparation_minutes: 150
+  preparation_minutes: 210
   # The user requested variable counts; never pad a quiet day with stale or minor news.
   min_stories: 4
   max_stories: 15
