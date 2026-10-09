@@ -40,14 +40,17 @@ def preparation_due(config, now=None):
     return n['delivery_enabled'] and target - timedelta(minutes=n.get('preparation_minutes', 75)) <= local < target + timedelta(hours=4)
 
 
-def wait_for_send_window(config):
-    while not schedule_due(config):
-        if not preparation_due(config):
-            raise DeliveryError('Preparation finished outside the valid send window')
+def wait_for_send_window(config, *, lead_seconds=0):
+    while True:
         now = datetime.now(timezone.utc)
+        if schedule_due(config, now): return
+        if not preparation_due(config, now):
+            raise DeliveryError('Preparation finished outside the valid send window')
+        remaining = (expected_send_time(config, now) - now).total_seconds() - lead_seconds
+        if remaining <= 0: return
         # Long waits stay inexpensive, but wake at the target rather than up
         # to 30 seconds afterwards. Mail acceptance still takes network time.
-        time.sleep(max(0.01, min(30, (expected_send_time(config, now) - now).total_seconds())))
+        time.sleep(min(30, remaining))
 
 
 def read_artifacts(root, config, expected_date):
@@ -122,12 +125,14 @@ def main(argv=None):
             atomic_json(root / 'edition.json', edition)
         if args.command == 'run':
             LOG.info('Edition ready; waiting for the local send window if necessary')
-            wait_for_send_window(config)
-        # Refresh weather after any scheduled wait, so the header reflects send time.
+            wait_for_send_window(config, lead_seconds=60)
+        # Refresh weather and render during the final minute before the target;
+        # keep that network request off the send-time critical path.
         edition['weather'] = forecast(config)
         atomic_json(root / 'edition.json', edition)
         html, text = write(edition, config['newsletter']['subject'], root, test=args.command != 'run', section_order=config['editorial']['section_order'])
         if args.command in ('send-test', 'run'):
+            if args.command == 'run': wait_for_send_window(config)
             if args.command == 'send-test':
                 articles = [Article(**a) for a in json.loads((root / 'articles.json').read_text())]
             verify_send_freshness(edition, articles, config)

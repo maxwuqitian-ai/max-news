@@ -229,3 +229,37 @@ def test_early_preparation_excludes_sources_expiring_just_after_send_target(conf
     monkeypatch.setattr(cli, 'generate', stop_before_writing)
     assert cli.main(['run']) == 1
     assert captured == ['fresh_at_0845']
+
+
+def test_weather_is_prepared_early_but_daily_delivery_still_waits_until_eight(config, artifacts, monkeypatch):
+    from news_agent import cli
+    articles, edition = artifacts
+    clock = [datetime(2026, 1, 15, 12, 58, 50, tzinfo=timezone.utc)]
+    sent = []
+
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return clock[0].astimezone(tz or timezone.utc)
+
+    def weather(_):
+        assert clock[0] == datetime(2026, 1, 15, 12, 59, tzinfo=timezone.utc)
+        clock[0] += timedelta(seconds=20)
+        return {'status': 'unavailable'}
+
+    def sleep(seconds):
+        clock[0] += timedelta(seconds=seconds)
+
+    config['newsletter']['delivery_enabled'] = True
+    monkeypatch.setattr(cli, 'datetime', Clock)
+    monkeypatch.setattr(cli.time, 'sleep', sleep)
+    monkeypatch.setattr(cli.configuration, 'load', lambda _: config)
+    monkeypatch.setattr(cli, 'already_attempted', lambda *_: None)
+    monkeypatch.setattr(cli, 'collect', lambda *_: (articles, []))
+    monkeypatch.setattr(cli, 'generate', lambda *args, **kwargs: edition)
+    monkeypatch.setattr(cli, 'forecast', weather)
+    monkeypatch.setattr(cli, 'write', lambda *args, **kwargs: ('Synthetic HTML', 'Synthetic text'))
+    monkeypatch.setattr(cli, 'verify_send_freshness', lambda *_: None)
+    monkeypatch.setattr(cli, 'deliver', lambda *args, **kwargs: sent.append(clock[0]))
+    assert cli.main(['run']) == 0
+    assert sent == [datetime(2026, 1, 15, 13, 0, tzinfo=timezone.utc)]
