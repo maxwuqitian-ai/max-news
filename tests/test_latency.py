@@ -197,3 +197,35 @@ def test_report_comparison_reuses_unchanged_evidence_but_rejects_a_new_conflict(
         assert len(route.calls) == 2
     finally:
         model.close()
+
+
+def test_early_preparation_excludes_sources_expiring_just_after_send_target(config, monkeypatch):
+    from news_agent import cli
+    from news_agent.collect import Article
+    from news_agent.editorial import EditorialError
+    now = datetime(2026, 10, 10, 8, 40, tzinfo=timezone.utc)  # 04:40 New York
+
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return now.astimezone(tz or timezone.utc)
+
+    articles = [Article(key, '合成时效测试', 'https://synthetic.example/' + key,
+        'Synthetic', 'synthetic', published, 'Synthetic evidence, not news.',
+        now.isoformat(), 'rss') for key, published in [
+            ('expires_0820', '2026-10-09T12:20:00+00:00'),
+            ('fresh_at_0845', '2026-10-09T12:50:00+00:00')]]
+    captured = []
+
+    def stop_before_writing(config, selected, edition_date, as_of):
+        captured.extend(a.id for a in selected)
+        raise EditorialError('Synthetic collection test stops before writing or mailing')
+
+    config['newsletter']['delivery_enabled'] = True
+    monkeypatch.setattr(cli, 'datetime', Clock)
+    monkeypatch.setattr(cli.configuration, 'load', lambda _: config)
+    monkeypatch.setattr(cli, 'already_attempted', lambda *_: None)
+    monkeypatch.setattr(cli, 'collect', lambda *_: (articles, []))
+    monkeypatch.setattr(cli, 'generate', stop_before_writing)
+    assert cli.main(['run']) == 1
+    assert captured == ['fresh_at_0845']

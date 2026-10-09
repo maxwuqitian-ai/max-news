@@ -110,8 +110,8 @@ def main(argv=None):
             if args.command in ('run','preview'):
                 # Preparing early must not admit reports that will be stale at
                 # the intended delivery time. Sending still checks actual time.
-                cutoff = max(expected_send_time(config, now) if args.command == 'run' else now,
-                             now + timedelta(minutes=config['newsletter'].get('freshness_buffer_minutes',0)))
+                cutoff = (expected_send_time(config, now) if args.command == 'run' else now) + timedelta(
+                    minutes=config['newsletter'].get('freshness_buffer_minutes', 0))
                 articles = [a for a in articles if is_fresh(a, cutoff, config['newsletter']['lookback_hours'])]
             atomic_json(root / 'articles.json', [a.to_dict() for a in articles])
             atomic_json(root / 'collection-report.json', {'retrieved_at': now.isoformat(), 'count': len(articles), 'failures': failures})
