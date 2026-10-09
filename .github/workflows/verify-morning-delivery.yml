@@ -1,0 +1,84 @@
+name: Verify morning delivery
+on:
+  schedule:
+    - cron: '15 12,13 * * *'
+  workflow_dispatch:
+    inputs:
+      edition_date:
+        description: Optional New York date to audit (YYYY-MM-DD)
+        required: false
+        type: string
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.lock && python -m pip install --no-deps -e .
+      - name: Check actual send time, independently of the sending workflow
+        id: timing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEWS_RECIPIENT: ${{ secrets.NEWS_RECIPIENT }}
+          AUDIT_DATE: ${{ inputs.edition_date }}
+          EVENT: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          python - <<'PY'
+          import base64, json, os, subprocess
+          from datetime import date, datetime, timezone
+          from zoneinfo import ZoneInfo
+          from news_agent.config import load
+          from news_agent.timing import verify_delivery_time
+          config = load('config.yaml')
+          now = datetime.now(ZoneInfo(config['newsletter']['timezone']))
+          # Choose by the scheduled UTC tick, so a delayed auditor still checks.
+          hour, minute = map(int, config['newsletter']['target_time'].split(':'))
+          target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+          expected_cron = f'15 {target.astimezone(timezone.utc).hour} * * *'
+          if os.environ['EVENT'] == 'schedule' and os.environ['SCHEDULE'] != expected_cron:
+              print('Other UTC offset tick; no audit needed')
+              raise SystemExit(0)
+          edition_date = os.environ.get('AUDIT_DATE') or now.date().isoformat()
+          date.fromisoformat(edition_date)
+          result = subprocess.run(['gh', 'api', 'repos/' + os.environ['GITHUB_REPOSITORY'] +
+              '/contents/deliveries.json?ref=news-agent-state'], check=True, capture_output=True, text=True)
+          ledger = json.loads(base64.b64decode(json.loads(result.stdout)['content']))
+          try:
+              record = verify_delivery_time(ledger, os.environ['NEWS_RECIPIENT'], edition_date, config)
+          except ValueError as exc:
+              raise SystemExit(str(exc))
+          print('Actual send timestamp: ' + record['sent_at'])
+          print('Timing passed: daily send within 60 seconds after the local target')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write('message_id=' + record['message_id'] + '\n')
+          PY
+      - name: Confirm provider delivery without sending another email
+        if: steps.timing.outputs.message_id != ''
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NEWS_RECIPIENT: ${{ secrets.NEWS_RECIPIENT }}
+          EMAIL_ID: ${{ steps.timing.outputs.message_id }}
+        run: |
+          python - <<'PY'
+          import json, os, uuid
+          from email.utils import parseaddr
+          from urllib.request import Request, urlopen
+          message_id = str(uuid.UUID(os.environ['EMAIL_ID']))
+          request = Request('https://api.resend.com/emails/' + message_id,
+              headers={'Authorization': 'Bearer ' + os.environ['RESEND_API_KEY'], 'User-Agent': 'max-news/1.0'})
+          with urlopen(request, timeout=20) as response:
+              body = json.load(response)
+          recipient = parseaddr(os.environ['NEWS_RECIPIENT'])[1].casefold()
+          if recipient not in [parseaddr(x)[1].casefold() for x in body.get('to', [])]:
+              raise SystemExit('Recipient mismatch')
+          status = body.get('last_event', 'unknown')
+          print('Provider delivery status: ' + status)
+          if status != 'delivered':
+              raise SystemExit('Provider has not confirmed delivery')
+          PY
