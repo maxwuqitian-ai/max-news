@@ -26,7 +26,8 @@ model:
   report_review_thinking: true
   report_review_max_output_tokens: 2000
   final_review_thinking: true
-  final_review_max_output_tokens: 6000
+  final_review_max_output_tokens: 2000
+  final_repair_attempts: 1
   grounded_translation: true
   api_key_env: null # local inference requires no API key
   timeout_seconds: 1800

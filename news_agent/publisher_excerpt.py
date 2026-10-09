@@ -125,7 +125,9 @@ def check_reports(story,articles,model,date,as_of,*,report_ids=None):
         'Reject published copy that a newer report materially supersedes or qualifies.',{
         'task':'Cross-check reports grouped under one event. Different complementary details are allowed. '
                'Reject material contradictions or unrelated events; do not demand unavailable corroboration.',
-        'edition_date':date,'as_of':as_of.isoformat(),
+        # Compare immutable reporting, not an advancing retrieval clock. Source
+        # timestamps remain explicit; freshness is rechecked before mailing.
+        'edition_date':date,
         'published_copy':{'headline':story['headline'],'paragraphs':[c['text'] for c in story['claims']
             if c.get('placement')!='headline']},
         'reports':[{'publisher':by_id[aid].publisher,'title':by_id[aid].title,

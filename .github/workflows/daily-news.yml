@@ -86,15 +86,6 @@ jobs:
               f.write(f'enabled={str(enabled).lower()}\nmode={mode}\n')
               f.write('model_key=' + sha256(config['model']['name'].encode()).hexdigest()[:16] + '\n')
           PY
-      - name: Restore local model cache
-        id: model_cache
-        if: steps.gate.outputs.enabled == 'true'
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            .tools/ollama
-            .models
-          key: ollama-linux-amd64-0.40.1-${{ steps.gate.outputs.model_key }}-${{ hashFiles('scripts/install_ollama.sh') }}
       - name: Check email credentials before generation
         if: steps.gate.outputs.enabled == 'true' && steps.gate.outputs.mode != 'preview'
         run: |
@@ -108,22 +99,6 @@ jobs:
           for name in ('NEWS_SENDER', 'NEWS_RECIPIENT'):
               address(os.environ[name])
           PY
-      - name: Start local model (no paid API key)
-        id: model_start
-        if: steps.gate.outputs.enabled == 'true'
-        run: |
-          ./scripts/install_ollama.sh
-          ./scripts/start_ollama.sh
-          model_name=$(python -c "from news_agent.config import load; print(load('config.yaml')['model']['name'])")
-          OLLAMA_HOST=127.0.0.1:11434 .tools/ollama/bin/ollama pull "$model_name"
-      - name: Save verified model cache
-        if: always() && steps.model_start.conclusion == 'success' && steps.model_cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            .tools/ollama
-            .models
-          key: ${{ steps.model_cache.outputs.cache-primary-key }}
       - name: Initialize durable delivery state
         if: steps.gate.outputs.enabled == 'true' && steps.gate.outputs.mode != 'preview'
         run: python scripts/state_branch.py init
@@ -137,15 +112,65 @@ jobs:
           config['newsletter']['state_dir'] = '.news-state'
           Path('runtime-config.yaml').write_text(yaml.safe_dump(config, allow_unicode=True))
           PY
-      - name: Restore exact-input generation checkpoints
+      - name: Skip completed or uncertain daily delivery before loading the model
+        id: ready
         if: steps.gate.outputs.enabled == 'true'
+        env:
+          MODE: ${{ steps.gate.outputs.mode }}
+        run: |
+          python - <<'PY'
+          import os
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          from news_agent.config import load
+          from news_agent.delivery import already_attempted
+          config = load('runtime-config.yaml')
+          enabled = True
+          if os.environ['MODE'] == 'daily':
+              edition_date = datetime.now(ZoneInfo(config['newsletter']['timezone'])).date().isoformat()
+              previous = already_attempted(config, edition_date)
+              if previous:
+                  if previous['status'] != 'sent':
+                      raise SystemExit('Previous daily send is uncertain; reconciliation required')
+                  print('Daily email already sent; skipping model restoration and generation')
+                  enabled = False
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f'enabled={str(enabled).lower()}\n')
+          PY
+      - name: Restore local model cache
+        id: model_cache
+        if: steps.ready.outputs.enabled == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            .tools/ollama
+            .models
+          key: ollama-linux-amd64-0.40.1-${{ steps.gate.outputs.model_key }}-${{ hashFiles('scripts/install_ollama.sh') }}
+      - name: Start local model (no paid API key)
+        id: model_start
+        if: steps.ready.outputs.enabled == 'true'
+        run: |
+          ./scripts/install_ollama.sh
+          ./scripts/start_ollama.sh
+          model_name=$(python -c "from news_agent.config import load; print(load('config.yaml')['model']['name'])")
+          OLLAMA_HOST=127.0.0.1:11434 .tools/ollama/bin/ollama pull "$model_name"
+      - name: Save verified model cache
+        if: always() && steps.model_start.conclusion == 'success' && steps.model_cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .tools/ollama
+            .models
+          key: ${{ steps.model_cache.outputs.cache-primary-key }}
+      - name: Restore exact-input generation checkpoints
+        if: steps.ready.outputs.enabled == 'true'
         uses: actions/cache/restore@v4
         with:
           path: output/.model-cache
           key: news-responses-${{ runner.os }}-${{ github.run_id }}
           restore-keys: news-responses-${{ runner.os }}-
       - name: Restore recent source snapshot for manual revalidation
-        if: steps.gate.outputs.enabled == 'true' && inputs.source_run_id != ''
+        if: steps.ready.outputs.enabled == 'true' && inputs.source_run_id != ''
         uses: actions/download-artifact@v4
         with:
           github-token: ${{ github.token }}
@@ -153,7 +178,7 @@ jobs:
           name: briefing-${{ inputs.source_run_id }}
           path: output
       - name: Collect and review preview
-        if: steps.gate.outputs.enabled == 'true' && steps.gate.outputs.mode != 'daily'
+        if: steps.ready.outputs.enabled == 'true' && steps.gate.outputs.mode != 'daily'
         env:
           SOURCE_RUN_ID: ${{ inputs.source_run_id }}
         run: |
@@ -161,21 +186,21 @@ jobs:
           if [ -n "$SOURCE_RUN_ID" ]; then generation_command=revalidate; fi
           python -m news_agent --config runtime-config.yaml "$generation_command"
       - name: Send manual test
-        if: steps.gate.outputs.enabled == 'true' && steps.gate.outputs.mode == 'send-test'
+        if: steps.ready.outputs.enabled == 'true' && steps.gate.outputs.mode == 'send-test'
         env:
           TEST_ID: ${{ inputs.test_id }}
         run: python -m news_agent --config runtime-config.yaml send-test --test-id "$TEST_ID"
       - name: Run daily briefing
-        if: steps.gate.outputs.enabled == 'true' && steps.gate.outputs.mode == 'daily'
+        if: steps.ready.outputs.enabled == 'true' && steps.gate.outputs.mode == 'daily'
         run: python -m news_agent --config runtime-config.yaml run
       - name: Save generation checkpoints even after a rejected draft
-        if: always() && steps.gate.outputs.enabled == 'true'
+        if: always() && steps.ready.outputs.enabled == 'true'
         uses: actions/cache/save@v4
         with:
           path: output/.model-cache
           key: news-responses-${{ runner.os }}-${{ github.run_id }}
       - name: Upload briefing and evidence
-        if: always() && steps.gate.outputs.enabled == 'true'
+        if: always() && steps.ready.outputs.enabled == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: briefing-${{ github.run_id }}

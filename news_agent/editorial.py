@@ -63,7 +63,10 @@ class Model:
                 return entry['response']
         except (OSError, ValueError, KeyError, TypeError):
             pass
+        started = time.monotonic()
         result = self._ask(system, payload)
+        LOG.info('Model request completed seconds=%.1f thinking=%s',
+                 time.monotonic() - started, self.config.get('thinking'))
         from .delivery import atomic_json
         atomic_json(path, {'created_at': time.time(), 'response': result})
         return result

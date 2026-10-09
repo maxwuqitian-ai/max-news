@@ -44,7 +44,10 @@ def wait_for_send_window(config):
     while not schedule_due(config):
         if not preparation_due(config):
             raise DeliveryError('Preparation finished outside the valid send window')
-        time.sleep(30)
+        now = datetime.now(timezone.utc)
+        # Long waits stay inexpensive, but wake at the target rather than up
+        # to 30 seconds afterwards. Mail acceptance still takes network time.
+        time.sleep(max(0.01, min(30, (expected_send_time(config, now) - now).total_seconds())))
 
 
 def read_artifacts(root, config, expected_date):

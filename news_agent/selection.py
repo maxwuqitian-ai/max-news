@@ -1,6 +1,10 @@
 """Classify small source batches; let Python own identity, grouping and ranking."""
 import logging
 import re
+import json
+import time
+from hashlib import sha256
+from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from math import floor
@@ -64,10 +68,36 @@ def rating_schema(ids):
 
 def classify(catalog, model, system, config):
     ratings = {}
+    from .editorial import Model
+    from .delivery import atomic_json
+    # Reuse only immutable, already validated source assessments. Edition
+    # selection, cross-report comparisons and final review still run afresh.
+    cache_config = model.config if isinstance(model, Model) else {}
+    cache_dir = cache_config.get('cache_dir') if cache_config.get('provider') == 'ollama' else None
+    paths = {}
+    for article in catalog:
+        if not cache_dir: continue
+        immutable = {k: v for k, v in article.items() if k not in ('id', 'published_age_hours')}
+        fingerprint = json.dumps({'version': 1, 'system': system,
+            'source': immutable, 'settings': {k: cache_config.get(k) for k in
+                ('provider', 'base_url', 'name', 'context_size', 'max_output_tokens', 'thinking')}},
+            ensure_ascii=False, sort_keys=True)
+        path = Path(cache_dir) / ('rating-' + sha256(fingerprint.encode()).hexdigest() + '.json')
+        paths[article['id']] = path
+        try:
+            entry = json.loads(path.read_text())
+            rating = entry['rating']
+            if (0 <= time.time() - entry['created_at'] <= cache_config.get('cache_ttl_seconds', 14400)
+                    and valid_rating(rating)):
+                ratings[article['id']] = rating
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
+    pending = [article for article in catalog if article['id'] not in ratings]
+    LOG.info('Source assessments reused=%d new=%d', len(ratings), len(pending))
     size = config['model'].get('selection_batch_size', 20)
     if not 1 <= size <= 30: raise EditorialError('Selection batch size must be 1–30')
-    for start in range(0, len(catalog), size):
-        batch = catalog[start:start + size]
+    for start in range(0, len(pending), size):
+        batch = pending[start:start + size]
         ids = {a['id'] for a in batch}
         payload = {
             'task': 'Rate EVERY supplied article separately. Do not select a newsletter yet. '
@@ -117,20 +147,29 @@ def classify(catalog, model, system, config):
                         # An internal grouping label is case/space insensitive;
                         # normalize syntax without changing any source identity.
                         r['event_key'] = re.sub(r'[^a-z0-9_-]+', '_', r['event_key'].casefold()).strip('_')
-                    if (not isinstance(r, dict) or r.get('category') not in CATEGORIES or r.get('genre') not in GENRES
-                            or type(r.get('is_conflict')) is not bool or not isinstance(r.get('event_key'), str)
-                            or not re.fullmatch(r'[a-z0-9_-]{3,100}', r['event_key'])
-                            or any(type(r.get(k)) is not int or not 0 <= r[k] <= 5 for k in ('consequence', 'global_relevance'))):
+                    if not valid_rating(r):
                         raise EditorialError(f'Invalid source assessment for {aid}')
                 for article in batch:
                     r = result[article['id']]
                     r['category'] = primary_category(article['title'], r['category'])
                 ratings.update(result)
+                for aid, rating in result.items():
+                    if aid in paths:
+                        atomic_json(paths[aid], {'created_at': time.time(), 'rating': rating})
                 break
             except EditorialError as exc:
                 if attempt: raise
                 payload['validation_error'] = str(exc)
     return ratings
+
+
+def valid_rating(rating):
+    return (isinstance(rating, dict) and rating.get('category') in CATEGORIES
+        and rating.get('genre') in GENRES and type(rating.get('is_conflict')) is bool
+        and isinstance(rating.get('event_key'), str)
+        and re.fullmatch(r'[a-z0-9_-]{3,100}', rating['event_key']) is not None
+        and all(type(rating.get(k)) is int and 0 <= rating[k] <= 5
+                for k in ('consequence', 'global_relevance')))
 
 def select(catalog, ratings, config, *, excluded=frozenset(),eligible_primary=None):
     policy, n = config['editorial'], config['newsletter']
