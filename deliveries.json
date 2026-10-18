@@ -96,9 +96,11 @@
     "sent_at": "2026-10-17T12:00:02.017303+00:00"
   },
   "daily:2026-10-18:9f8e6d8e5c2447cc": {
-    "status": "pending",
+    "status": "sent",
     "provider": "resend",
     "date": "2026-10-18",
-    "attempted_at": "2026-10-18T12:00:00.019754+00:00"
+    "attempted_at": "2026-10-18T12:00:00.019754+00:00",
+    "message_id": "01a14ee2-14ff-7b23-8cbf-9eeb1bf80479",
+    "sent_at": "2026-10-18T12:00:01.885631+00:00"
   }
 }
