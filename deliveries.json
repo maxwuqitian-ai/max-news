@@ -246,5 +246,11 @@
     "attempted_at": "2026-11-05T13:00:00.003959+00:00",
     "message_id": "01a1abcb-7b35-7b09-87ca-ed19bc4a6e31",
     "sent_at": "2026-11-05T13:00:01.789500+00:00"
+  },
+  "daily:2026-11-06:9f8e6d8e5c2447cc": {
+    "status": "pending",
+    "provider": "resend",
+    "date": "2026-11-06",
+    "attempted_at": "2026-11-06T13:50:54.270014+00:00"
   }
 }
