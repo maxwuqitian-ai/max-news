@@ -27,25 +27,22 @@ jobs:
           NEWS_RECIPIENT: ${{ secrets.NEWS_RECIPIENT }}
           AUDIT_DATE: ${{ inputs.edition_date }}
           EVENT: ${{ github.event_name }}
-          SCHEDULE: ${{ github.event.schedule }}
         run: |
           python - <<'PY'
           import base64, json, os, subprocess
-          from datetime import date, datetime, timezone
+          from datetime import date, datetime
           from zoneinfo import ZoneInfo
           from news_agent.config import load
-          from news_agent.timing import verify_delivery_time
+          from news_agent.timing import verify_delivery_time, latest_due_edition_date
           config = load('config.yaml')
           now = datetime.now(ZoneInfo(config['newsletter']['timezone']))
-          # Choose by the scheduled UTC tick, so a delayed auditor still checks.
-          hour, minute = map(int, config['newsletter']['target_time'].split(':'))
-          target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-          expected_cron = f'15 {target.astimezone(timezone.utc).hour} * * *'
-          if os.environ['EVENT'] == 'schedule' and os.environ['SCHEDULE'] != expected_cron:
-              print('Other UTC offset tick; no audit needed')
-              raise SystemExit(0)
-          edition_date = os.environ.get('AUDIT_DATE') or now.date().isoformat()
+          # Combined cron expressions are not equal to a single expanded tick.
+          # Always inspect the latest completed morning, even after a delayed
+          # trigger or midnight rollover. The early EST tick checks yesterday.
+          edition_date = (latest_due_edition_date(config, now) if os.environ['EVENT'] == 'schedule'
+              else os.environ.get('AUDIT_DATE') or now.date().isoformat())
           date.fromisoformat(edition_date)
+          print('Auditing New York edition date: ' + edition_date)
           result = subprocess.run(['gh', 'api', 'repos/' + os.environ['GITHUB_REPOSITORY'] +
               '/contents/deliveries.json?ref=news-agent-state'], check=True, capture_output=True, text=True)
           ledger = json.loads(base64.b64decode(json.loads(result.stdout)['content']))

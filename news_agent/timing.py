@@ -5,6 +5,14 @@ from zoneinfo import ZoneInfo
 from .delivery import delivery_key
 
 
+def latest_due_edition_date(config, now):
+    """Audit the latest morning whose 15-minute delivery grace has elapsed."""
+    local = now.astimezone(ZoneInfo(config['newsletter']['timezone']))
+    hour, minute = map(int, config['newsletter']['target_time'].split(':'))
+    deadline = local.replace(hour=hour, minute=minute, second=0, microsecond=0) + timedelta(minutes=15)
+    return (local.date() if local >= deadline else local.date() - timedelta(days=1)).isoformat()
+
+
 def verify_delivery_time(ledger, recipient, edition_date, config):
     record = ledger.get(delivery_key(recipient, edition_date))
     if not record or record.get('status') != 'sent':
