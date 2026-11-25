@@ -12,9 +12,9 @@ on:
     inputs:
       mode:
         type: choice
-        options: [preview, send-test, daily]
+        options: [check, preview, send-test, daily]
         default: preview
-        description: Preview only, manual test, or gated daily delivery
+        description: No-mail health check, preview, manual test, or gated daily delivery
       test_id:
         type: string
         description: Stable test identity (required for send-test; reuse prevents duplicate emails)
@@ -81,7 +81,7 @@ jobs:
           if source_run and (not manual or mode not in ('preview', 'send-test') or not re.fullmatch(r'[1-9][0-9]*', source_run)):
               raise SystemExit('Source snapshot reuse is only allowed for manual preview/send-test with a numeric run ID')
           config = load('config.yaml')
-          enabled = manual and mode in ('preview', 'send-test') or preparation_due(config)
+          enabled = (manual and mode in ('preview', 'send-test')) or (mode == 'daily' and preparation_due(config))
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               f.write(f'enabled={str(enabled).lower()}\nmode={mode}\n')
               f.write('model_key=' + sha256(config['model']['name'].encode()).hexdigest()[:16] + '\n')

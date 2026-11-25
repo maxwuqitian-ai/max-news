@@ -1,0 +1,47 @@
+name: Configure independent morning clock
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Review plan, apply jobs, or verify existing jobs (never sends mail)
+        type: choice
+        options: [plan, apply, verify]
+        default: plan
+  push:
+    branches: [main]
+    paths:
+      - config.yaml
+      - news_agent/external_scheduler.py
+      - .github/workflows/configure-scheduler.yml
+permissions:
+  contents: read
+concurrency:
+  group: independent-news-clock-setup
+  cancel-in-progress: false
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.lock && python -m pip install --no-deps -e .
+      - run: python -m pytest -q
+      - name: Review or configure cron-job.org
+        env:
+          CRONJOB_API_KEY: ${{ secrets.CRONJOB_API_KEY }}
+          NEWS_DISPATCH_TOKEN: ${{ secrets.NEWS_DISPATCH_TOKEN }}
+          REQUESTED_ACTION: ${{ inputs.action }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          action="$REQUESTED_ACTION"
+          if [ "$EVENT" = push ]; then
+            action=plan
+            if [ -n "$CRONJOB_API_KEY" ] && [ -n "$NEWS_DISPATCH_TOKEN" ]; then action=apply; fi
+          fi
+          if [ "$action" = plan ]; then
+            echo '::notice title=Plan only::No scheduler changes will be applied. Activation requires both Repository secrets and a successful apply.'
+          fi
+          python -m news_agent.external_scheduler "$action"

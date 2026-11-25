@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       edition_date:
-        description: Optional New York date to audit (YYYY-MM-DD)
+        description: Optional New York date (YYYY-MM-DD); default latest completed morning
         required: false
         type: string
 permissions:
@@ -26,7 +26,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           NEWS_RECIPIENT: ${{ secrets.NEWS_RECIPIENT }}
           AUDIT_DATE: ${{ inputs.edition_date }}
-          EVENT: ${{ github.event_name }}
         run: |
           python - <<'PY'
           import base64, json, os, subprocess
@@ -39,8 +38,7 @@ jobs:
           # Combined cron expressions are not equal to a single expanded tick.
           # Always inspect the latest completed morning, even after a delayed
           # trigger or midnight rollover. The early EST tick checks yesterday.
-          edition_date = (latest_due_edition_date(config, now) if os.environ['EVENT'] == 'schedule'
-              else os.environ.get('AUDIT_DATE') or now.date().isoformat())
+          edition_date = os.environ.get('AUDIT_DATE') or latest_due_edition_date(config, now)
           date.fromisoformat(edition_date)
           print('Auditing New York edition date: ' + edition_date)
           result = subprocess.run(['gh', 'api', 'repos/' + os.environ['GITHUB_REPOSITORY'] +

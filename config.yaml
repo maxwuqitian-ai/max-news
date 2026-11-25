@@ -18,6 +18,10 @@ newsletter:
   # Editorial validation remains mandatory; failed generation never sends an email.
   delivery_enabled: true
   recipient_env: NEWS_RECIPIENT
+scheduler:
+  # Independent cron-job.org jobs dispatch GitHub Actions using this ref.
+  # Target time, preparation window and timezone are derived from newsletter above.
+  ref: main
 model:
   provider: ollama
   base_url: http://127.0.0.1:11434
